@@ -4,7 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@/store';
 import { selectMessages } from '@/store/slices/chat-slice';
-import { subscribeToGroupMessages, sendGroupMessage } from '@/lib/firestore';
+import { subscribeToGroupMessages, sendGroupMessage } from '@/lib/database';
 import { FlatList } from 'react-native';
 import { MessageBubble } from '@/components/chat/message-bubble';
 import { ChatInput } from '@/components/chat/chat-input';

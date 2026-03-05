@@ -1,0 +1,266 @@
+import { supabase } from './supabase';
+import { setMessages, addPendingMessage, setConversations } from '@/store/slices/chat-slice';
+import { encryptMessage, decryptMessage } from './encryption';
+import type { AppDispatch } from '@/store';
+import type { Message } from '@/store/slices/chat-slice';
+
+// --- Message helpers ---
+
+export function subscribeToMessages(conversationId: string, dispatch: AppDispatch) {
+  // Fetch existing messages first
+  supabase
+    .from('messages')
+    .select('*')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: false })
+    .limit(100)
+    .then(({ data }) => {
+      if (!data) return;
+      const msgs: Message[] = data.map((row) => {
+        let text = row.text as string;
+        if (row.encrypted && row.nonce && row.sender_public_key) {
+          text = decryptMessage(row.text, row.nonce, row.sender_public_key) ?? '[encrypted]';
+        }
+        return {
+          id: row.id,
+          senderId: row.sender_id,
+          text,
+          createdAt: new Date(row.created_at).getTime(),
+          status: row.status ?? 'sent',
+          conversationId,
+        };
+      });
+      dispatch(setMessages({ conversationId, messages: msgs }));
+    });
+
+  // Subscribe to new messages in real-time
+  const channel = supabase
+    .channel(`messages:${conversationId}`)
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
+      (payload) => {
+        const row = payload.new as any;
+        let text = row.text as string;
+        if (row.encrypted && row.nonce && row.sender_public_key) {
+          text = decryptMessage(row.text, row.nonce, row.sender_public_key) ?? '[encrypted]';
+        }
+        const msg: Message = {
+          id: row.id,
+          senderId: row.sender_id,
+          text,
+          createdAt: new Date(row.created_at).getTime(),
+          status: row.status ?? 'sent',
+          conversationId,
+        };
+        dispatch(setMessages({ conversationId, messages: [msg] }));
+      },
+    )
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
+      (payload) => {
+        const row = payload.new as any;
+        dispatch(setMessages({
+          conversationId,
+          messages: [{
+            id: row.id,
+            senderId: row.sender_id,
+            text: row.text,
+            createdAt: new Date(row.created_at).getTime(),
+            status: row.status,
+            conversationId,
+          }],
+        }));
+      },
+    )
+    .subscribe();
+
+  return () => { supabase.removeChannel(channel); };
+}
+
+export async function sendMessage(conversationId: string, senderId: string, text: string): Promise<void> {
+  const { ciphertext, nonce, senderPublicKey } = encryptMessage(text);
+
+  await supabase.from('messages').insert({
+    conversation_id: conversationId,
+    sender_id: senderId,
+    text: ciphertext,
+    nonce,
+    sender_public_key: senderPublicKey,
+    encrypted: true,
+    status: 'sent',
+  });
+
+  await supabase
+    .from('conversations')
+    .update({ last_message: text, updated_at: new Date().toISOString() })
+    .eq('id', conversationId);
+}
+
+export async function sendMessageOrQueue(
+  conversationId: string,
+  senderId: string,
+  text: string,
+  dispatch: AppDispatch,
+  isConnected: boolean,
+): Promise<void> {
+  if (!isConnected) {
+    const pendingMsg: Message = {
+      id: `pending_${Date.now()}`,
+      senderId,
+      text,
+      createdAt: Date.now(),
+      status: 'pending',
+      conversationId,
+    };
+    dispatch(addPendingMessage(pendingMsg));
+    return;
+  }
+  await sendMessage(conversationId, senderId, text);
+}
+
+export async function markAsSeen(conversationId: string, viewerUid: string): Promise<void> {
+  await supabase
+    .from('messages')
+    .update({ status: 'seen' })
+    .eq('conversation_id', conversationId)
+    .eq('status', 'sent')
+    .neq('sender_id', viewerUid);
+}
+
+// --- Conversation helpers ---
+
+export function subscribeToConversations(uid: string, dispatch: AppDispatch) {
+  supabase
+    .from('conversations')
+    .select('*')
+    .contains('participants', [uid])
+    .order('updated_at', { ascending: false })
+    .then(({ data }) => {
+      if (data) dispatch(setConversations(data.map((c) => ({
+        id: c.id,
+        participants: c.participants,
+        lastMessage: c.last_message,
+        updatedAt: new Date(c.updated_at).getTime(),
+      }))));
+    });
+
+  const channel = supabase
+    .channel(`conversations:${uid}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'conversations' },
+      () => {
+        supabase
+          .from('conversations')
+          .select('*')
+          .contains('participants', [uid])
+          .order('updated_at', { ascending: false })
+          .then(({ data }) => {
+            if (data) dispatch(setConversations(data.map((c) => ({
+              id: c.id,
+              participants: c.participants,
+              lastMessage: c.last_message,
+              updatedAt: new Date(c.updated_at).getTime(),
+            }))));
+          });
+      },
+    )
+    .subscribe();
+
+  return () => { supabase.removeChannel(channel); };
+}
+
+export async function createConversation(uid1: string, uid2: string): Promise<string> {
+  const id = [uid1, uid2].sort().join('_');
+  await supabase.from('conversations').upsert({
+    id,
+    participants: [uid1, uid2],
+    last_message: '',
+    updated_at: new Date().toISOString(),
+  });
+  return id;
+}
+
+// --- User search ---
+
+export async function searchUsers(query: string, currentUid: string) {
+  const { data } = await supabase
+    .from('users')
+    .select('id, email, display_name')
+    .ilike('display_name', `%${query}%`)
+    .neq('id', currentUid)
+    .limit(20);
+  return (data ?? []).map((u) => ({ uid: u.id, email: u.email, displayName: u.display_name }));
+}
+
+// --- Group helpers ---
+
+export async function createGroup(name: string, participants: string[], createdBy: string): Promise<string> {
+  const { data, error } = await supabase
+    .from('groups')
+    .insert({ name, participants, created_by: createdBy })
+    .select('id')
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
+export function subscribeToGroupMessages(groupId: string, dispatch: AppDispatch) {
+  supabase
+    .from('group_messages')
+    .select('*')
+    .eq('group_id', groupId)
+    .order('created_at', { ascending: false })
+    .limit(100)
+    .then(({ data }) => {
+      if (!data) return;
+      const msgs: Message[] = data.map((row) => ({
+        id: row.id,
+        senderId: row.sender_id,
+        text: row.text,
+        createdAt: new Date(row.created_at).getTime(),
+        status: 'sent',
+        conversationId: groupId,
+      }));
+      dispatch(setMessages({ conversationId: groupId, messages: msgs }));
+    });
+
+  const channel = supabase
+    .channel(`group_messages:${groupId}`)
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'group_messages', filter: `group_id=eq.${groupId}` },
+      (payload) => {
+        const row = payload.new as any;
+        dispatch(setMessages({
+          conversationId: groupId,
+          messages: [{
+            id: row.id,
+            senderId: row.sender_id,
+            text: row.text,
+            createdAt: new Date(row.created_at).getTime(),
+            status: 'sent',
+            conversationId: groupId,
+          }],
+        }));
+      },
+    )
+    .subscribe();
+
+  return () => { supabase.removeChannel(channel); };
+}
+
+export async function sendGroupMessage(groupId: string, senderId: string, text: string): Promise<void> {
+  await supabase.from('group_messages').insert({
+    group_id: groupId,
+    sender_id: senderId,
+    text,
+    status: 'sent',
+  });
+  await supabase
+    .from('groups')
+    .update({ last_message: text, updated_at: new Date().toISOString() })
+    .eq('id', groupId);
+}

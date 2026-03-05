@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "YOUR_PROJECT_NUMBER",
-    "project_id": "YOUR_PROJECT_ID",
-    "storage_bucket": "YOUR_PROJECT_ID.appspot.com"
+    "project_number": "428830017952",
+    "project_id": "pet-assessment-app",
+    "storage_bucket": "pet-assessment-app.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "YOUR_ANDROID_APP_ID",
+        "mobilesdk_app_id": "1:428830017952:android:2b3f5907534f4950b5fcc5",
         "android_client_info": {
           "package_name": "com.tanpham.assessment"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "YOUR_ANDROID_API_KEY"
+          "current_key": "AIzaSyAEx2vcg4PngvjWTde-S8AmFf5MUk2IEoc"
         }
       ],
       "services": {

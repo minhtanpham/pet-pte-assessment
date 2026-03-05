@@ -1,7 +1,7 @@
-import messaging from '@react-native-firebase/messaging';
 import * as Notifications from 'expo-notifications';
-import firestore from '@react-native-firebase/firestore';
+import * as Device from 'expo-device';
 import { Platform } from 'react-native';
+import { supabase } from './supabase';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -14,6 +14,8 @@ Notifications.setNotificationHandler({
 });
 
 export async function registerForPushNotifications(uid: string): Promise<void> {
+  if (!Device.isDevice) return; // Skip in simulator
+
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
 
@@ -32,23 +34,9 @@ export async function registerForPushNotifications(uid: string): Promise<void> {
     });
   }
 
-  // Get FCM token via @react-native-firebase/messaging
-  const fcmToken = await messaging().getToken();
-  if (fcmToken) {
-    await firestore().collection('users').doc(uid).set({ fcmToken }, { merge: true });
+  // Expo Push Token works on both iOS (APNs) and Android (FCM) without native Firebase
+  const { data: pushToken } = await Notifications.getExpoPushTokenAsync();
+  if (pushToken) {
+    await supabase.from('users').update({ push_token: pushToken }).eq('id', uid);
   }
-
-  // Handle foreground messages
-  messaging().onMessage(async (remoteMessage) => {
-    const { notification } = remoteMessage;
-    if (!notification) return;
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: notification.title ?? 'New Message',
-        body: notification.body ?? '',
-        data: remoteMessage.data ?? {},
-      },
-      trigger: null,
-    });
-  });
 }

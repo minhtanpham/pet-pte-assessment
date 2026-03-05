@@ -1,6 +1,4 @@
-import firestore from '@react-native-firebase/firestore';
-
-const callsCollection = () => firestore().collection('calls');
+import { supabase } from './supabase';
 
 export async function createCallDocument(
   callId: string,
@@ -8,64 +6,73 @@ export async function createCallDocument(
   calleeId: string,
   offer: RTCSessionDescriptionInit,
 ): Promise<void> {
-  await callsCollection().doc(callId).set({
+  await supabase.from('calls').upsert({
+    id: callId,
+    caller_id: callerId,
+    callee_id: calleeId,
     offer,
-    callerId,
-    calleeId,
     status: 'ringing',
-    createdAt: firestore.FieldValue.serverTimestamp(),
   });
 }
 
 export async function setAnswer(callId: string, answer: RTCSessionDescriptionInit): Promise<void> {
-  await callsCollection().doc(callId).update({ answer, status: 'active' });
+  await supabase.from('calls').update({ answer, status: 'active' }).eq('id', callId);
 }
 
 export async function addCallerCandidate(callId: string, candidate: RTCIceCandidateInit): Promise<void> {
-  await callsCollection().doc(callId).collection('callerCandidates').add({ candidate });
+  const channel = supabase.channel(`call-candidates:${callId}`);
+  await channel.send({ type: 'broadcast', event: 'caller-candidate', payload: { candidate } });
 }
 
 export async function addCalleeCandidate(callId: string, candidate: RTCIceCandidateInit): Promise<void> {
-  await callsCollection().doc(callId).collection('calleeCandidates').add({ candidate });
+  const channel = supabase.channel(`call-candidates:${callId}`);
+  await channel.send({ type: 'broadcast', event: 'callee-candidate', payload: { candidate } });
 }
 
 export function subscribeToCallDocument(
   callId: string,
   onUpdate: (data: any) => void,
 ): () => void {
-  return callsCollection().doc(callId).onSnapshot((snap) => {
-    if (snap.exists) onUpdate(snap.data());
-  });
+  const channel = supabase
+    .channel(`call-doc:${callId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'calls', filter: `id=eq.${callId}` },
+      (payload) => onUpdate(payload.new),
+    )
+    .subscribe();
+
+  return () => { supabase.removeChannel(channel); };
 }
 
 export function subscribeToCalleeCandidates(
   callId: string,
   onCandidate: (candidate: RTCIceCandidateInit) => void,
 ): () => void {
-  return callsCollection()
-    .doc(callId)
-    .collection('calleeCandidates')
-    .onSnapshot((snap) => {
-      snap.docChanges().forEach((change) => {
-        if (change.type === 'added') onCandidate(change.doc.data().candidate);
-      });
-    });
+  const channel = supabase
+    .channel(`call-candidates:${callId}`)
+    .on('broadcast', { event: 'callee-candidate' }, ({ payload }) => {
+      onCandidate(payload.candidate);
+    })
+    .subscribe();
+
+  return () => { supabase.removeChannel(channel); };
 }
 
 export function subscribeToCallerCandidates(
   callId: string,
   onCandidate: (candidate: RTCIceCandidateInit) => void,
 ): () => void {
-  return callsCollection()
-    .doc(callId)
-    .collection('callerCandidates')
-    .onSnapshot((snap) => {
-      snap.docChanges().forEach((change) => {
-        if (change.type === 'added') onCandidate(change.doc.data().candidate);
-      });
-    });
+  const channel = supabase
+    .channel(`call-candidates:${callId}`)
+    .on('broadcast', { event: 'caller-candidate' }, ({ payload }) => {
+      onCandidate(payload.candidate);
+    })
+    .subscribe();
+
+  return () => { supabase.removeChannel(channel); };
 }
 
 export async function endCall(callId: string): Promise<void> {
-  await callsCollection().doc(callId).update({ status: 'ended' });
+  await supabase.from('calls').update({ status: 'ended' }).eq('id', callId);
 }

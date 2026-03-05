@@ -14,7 +14,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import firestore from '@react-native-firebase/firestore';
 import type { RootState, AppDispatch } from '@/store';
 import { setConversations } from '@/store/slices/chat-slice';
-import { createGroup } from '@/lib/firestore';
+import { createGroup } from '@/lib/database';
 
 interface Group {
   id: string;

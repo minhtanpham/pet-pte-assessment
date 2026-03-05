@@ -5,13 +5,13 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import auth from '@react-native-firebase/auth';
 import { ActivityIndicator, View } from 'react-native';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { store, persistor } from '@/store';
 import type { AppDispatch, RootState } from '@/store';
 import { setUser, clearUser, setLoading } from '@/store/slices/auth-slice';
+import { supabase } from '@/lib/supabase';
 import { restoreSession } from '@/lib/auth';
 import { registerForPushNotifications } from '@/lib/notifications';
 
@@ -25,23 +25,27 @@ function AuthGate() {
   const { isAuthenticated, isLoading } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
-    // Attempt to restore session from SecureStore first
-    restoreSession(dispatch).catch(() => dispatch(setLoading(false)));
+    // Restore persisted session on launch
+    restoreSession(dispatch)
+      .catch(() => dispatch(setLoading(false)))
+      .finally(() => dispatch(setLoading(false)));
 
-    // Firebase auth state listener
-    const unsubscribe = auth().onAuthStateChanged((user) => {
-      if (user) {
+    // Supabase auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const user = session.user;
         dispatch(setUser({
-          uid: user.uid,
+          uid: user.id,
           email: user.email ?? '',
-          displayName: user.displayName,
+          displayName: user.user_metadata?.display_name ?? null,
         }));
-        registerForPushNotifications(user.uid).catch(() => {});
+        registerForPushNotifications(user.id).catch(() => {});
       } else {
         dispatch(clearUser());
       }
     });
-    return unsubscribe;
+
+    return () => subscription.unsubscribe();
   }, [dispatch]);
 
   useEffect(() => {

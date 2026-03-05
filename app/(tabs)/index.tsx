@@ -12,7 +12,7 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@/store';
 import { selectConversationList } from '@/store/slices/chat-slice';
-import { subscribeToConversations, searchUsers, createConversation } from '@/lib/firestore';
+import { subscribeToConversations, searchUsers, createConversation } from '@/lib/database';
 import { ChatList } from '@/components/chat/chat-list';
 import { logout } from '@/lib/auth';
 import { useNetwork } from '@/hooks/use-network';

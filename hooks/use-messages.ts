@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@/store';
 import { selectMessages, selectPendingMessages } from '@/store/slices/chat-slice';
-import { sendMessageOrQueue } from '@/lib/firestore';
+import { sendMessageOrQueue } from '@/lib/database';
 import type { Message } from '@/store/slices/chat-slice';
 
 export function useMessages(conversationId: string) {

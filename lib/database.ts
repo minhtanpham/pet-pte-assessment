@@ -1,6 +1,5 @@
 import { supabase } from './supabase';
 import { setMessages, addMessage, updateMessageStatus, addPendingMessage, setConversations } from '@/store/slices/chat-slice';
-import { encryptMessage, decryptMessage } from './encryption';
 import type { AppDispatch } from '@/store';
 import type { Message } from '@/store/slices/chat-slice';
 
@@ -16,20 +15,14 @@ export function subscribeToMessages(conversationId: string, dispatch: AppDispatc
     .limit(100)
     .then(({ data }) => {
       if (!data) return;
-      const msgs: Message[] = data.map((row) => {
-        let text = row.text as string;
-        if (row.encrypted && row.nonce && row.sender_public_key) {
-          text = decryptMessage(row.text, row.nonce, row.sender_public_key) ?? '[encrypted]';
-        }
-        return {
-          id: row.id,
-          senderId: row.sender_id,
-          text,
-          createdAt: new Date(row.created_at).getTime(),
-          status: row.status ?? 'sent',
-          conversationId,
-        };
-      });
+      const msgs: Message[] = data.map((row) => ({
+        id: row.id,
+        senderId: row.sender_id,
+        text: row.text as string,
+        createdAt: new Date(row.created_at).getTime(),
+        status: row.status ?? 'sent',
+        conversationId,
+      }));
       dispatch(setMessages({ conversationId, messages: msgs }));
     });
 
@@ -41,19 +34,14 @@ export function subscribeToMessages(conversationId: string, dispatch: AppDispatc
       { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
       (payload) => {
         const row = payload.new as any;
-        let text = row.text as string;
-        if (row.encrypted && row.nonce && row.sender_public_key) {
-          text = decryptMessage(row.text, row.nonce, row.sender_public_key) ?? '[encrypted]';
-        }
-        const msg: Message = {
+        dispatch(addMessage({
           id: row.id,
           senderId: row.sender_id,
-          text,
+          text: row.text as string,
           createdAt: new Date(row.created_at).getTime(),
           status: row.status ?? 'sent',
           conversationId,
-        };
-        dispatch(addMessage(msg));
+        }));
       },
     )
     .on(
@@ -75,15 +63,11 @@ export function subscribeToMessages(conversationId: string, dispatch: AppDispatc
 }
 
 export async function sendMessage(conversationId: string, senderId: string, text: string): Promise<void> {
-  const { ciphertext, nonce, senderPublicKey } = encryptMessage(text);
-
   await supabase.from('messages').insert({
     conversation_id: conversationId,
     sender_id: senderId,
-    text: ciphertext,
-    nonce,
-    sender_public_key: senderPublicKey,
-    encrypted: true,
+    text,
+    encrypted: false,
     status: 'sent',
   });
 

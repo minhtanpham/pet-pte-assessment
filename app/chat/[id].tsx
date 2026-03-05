@@ -5,6 +5,7 @@ import {
   sendMessageOrQueue,
   subscribeToMessages,
 } from "@/lib/database";
+import { supabase } from "@/lib/supabase";
 import type { AppDispatch, RootState } from "@/store";
 import type { Message } from "@/store/slices/chat-slice";
 import {
@@ -12,8 +13,8 @@ import {
   selectMessages,
   selectPendingMessages,
 } from "@/store/slices/chat-slice";
-import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useRef } from "react";
+import { Stack, router, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -38,20 +39,33 @@ export default function ChatScreen() {
   const pendingMessages = useSelector((state: RootState) =>
     selectPendingMessages(state, conversationId),
   );
-  const flatListRef = useRef<FlatList>(null);
+  const [otherUserName, setOtherUserName] = useState("Chat");
+
+  useEffect(() => {
+    if (!conversationId || !uid) return;
+    supabase
+      .from("conversations")
+      .select("participants")
+      .eq("id", conversationId)
+      .single()
+      .then(async ({ data }) => {
+        if (!data) return;
+        const otherId = (data.participants as string[]).find((p) => p !== uid);
+        if (!otherId) return;
+        const { data: user } = await supabase
+          .from("users")
+          .select("display_name, email")
+          .eq("id", otherId)
+          .single();
+        if (user) setOtherUserName(user.display_name || user.email || "Chat");
+      });
+  }, [conversationId, uid]);
 
   useEffect(() => {
     if (!conversationId) return;
     const unsubscribe = subscribeToMessages(conversationId, dispatch);
     return unsubscribe;
   }, [conversationId, dispatch]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!conversationId || !uid) return;
-      markAsSeen(conversationId, uid);
-    }, [conversationId, uid]),
-  );
 
   useEffect(() => {
     if (!conversationId || !uid) return;
@@ -98,8 +112,6 @@ export default function ChatScreen() {
     [uid],
   );
 
-  const keyExtractor = useCallback((item: Message) => item.id, []);
-
   const ITEM_HEIGHT = 64;
   const getItemLayout = useCallback(
     (_: any, index: number) => ({
@@ -111,38 +123,46 @@ export default function ChatScreen() {
   );
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={90}
-    >
-      {!isConnected && (
-        <View style={styles.offlineBanner}>
-          <Text style={styles.offlineText}>
-            You are offline. Messages will be sent when reconnected.
-          </Text>
-        </View>
-      )}
-      <FlatList
-        ref={flatListRef}
-        data={allMessages}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        getItemLayout={getItemLayout}
-        inverted
-        removeClippedSubviews
-        maxToRenderPerBatch={20}
-        windowSize={10}
-        contentContainerStyle={styles.listContent}
+    <>
+      <Stack.Screen
+        options={{
+          title: otherUserName,
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => router.push(`/call/${conversationId}`)}
+              style={styles.callButton}
+            >
+              <Text style={styles.callButtonText}>Video Call</Text>
+            </TouchableOpacity>
+          ),
+        }}
       />
-      <TouchableOpacity
-        style={styles.callButton}
-        onPress={() => router.push(`/call/${conversationId}`)}
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={90}
       >
-        <Text style={styles.callButtonText}>Video Call</Text>
-      </TouchableOpacity>
-      <ChatInput onSend={handleSend} />
-    </KeyboardAvoidingView>
+        {!isConnected && (
+          <View style={styles.offlineBanner}>
+            <Text style={styles.offlineText}>
+              You are offline. Messages will be sent when reconnected.
+            </Text>
+          </View>
+        )}
+        <FlatList
+          data={allMessages}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          getItemLayout={getItemLayout}
+          inverted
+          removeClippedSubviews
+          maxToRenderPerBatch={20}
+          windowSize={10}
+          contentContainerStyle={styles.listContent}
+        />
+        <ChatInput onSend={handleSend} />
+      </KeyboardAvoidingView>
+    </>
   );
 }
 
@@ -158,13 +178,10 @@ const styles = StyleSheet.create({
   },
   offlineText: { color: "#92400E", fontSize: 13, textAlign: "center" },
   callButton: {
-    position: "absolute",
-    top: 8,
-    right: 16,
     backgroundColor: "#0a7ea4",
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
   },
   callButtonText: { color: "#fff", fontSize: 13, fontWeight: "600" },
 });

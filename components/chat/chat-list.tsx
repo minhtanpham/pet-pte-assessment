@@ -1,6 +1,7 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
+import { supabase } from '@/lib/supabase';
 import type { Conversation } from '@/store/slices/chat-slice';
 
 interface Props {
@@ -11,12 +12,12 @@ interface Props {
 interface ConversationItemProps {
   conversation: Conversation;
   currentUid: string;
+  userName: string;
 }
 
 const ITEM_HEIGHT = 72;
 
-const ConversationItem = memo(function ConversationItem({ conversation, currentUid }: ConversationItemProps) {
-  const otherParticipant = conversation.participants.find((p) => p !== currentUid) ?? '';
+const ConversationItem = memo(function ConversationItem({ conversation, currentUid, userName }: ConversationItemProps) {
   const formattedTime = conversation.updatedAt
     ? new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(
         new Date(conversation.updatedAt),
@@ -28,12 +29,12 @@ const ConversationItem = memo(function ConversationItem({ conversation, currentU
       style={styles.item}
       onPress={() => router.push(`/chat/${conversation.id}`)}>
       <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{otherParticipant.charAt(0).toUpperCase()}</Text>
+        <Text style={styles.avatarText}>{userName.charAt(0).toUpperCase()}</Text>
       </View>
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.name} numberOfLines={1}>
-            {otherParticipant}
+            {userName}
           </Text>
           <Text style={styles.time}>{formattedTime}</Text>
         </View>
@@ -46,11 +47,42 @@ const ConversationItem = memo(function ConversationItem({ conversation, currentU
 });
 
 export const ChatList = memo(function ChatList({ conversations, currentUid }: Props) {
+  const [userNames, setUserNames] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const otherUids = [
+      ...new Set(
+        conversations
+          .flatMap((c) => c.participants)
+          .filter((p) => p !== currentUid),
+      ),
+    ];
+    if (otherUids.length === 0) return;
+
+    supabase
+      .from('users')
+      .select('id, display_name, email')
+      .in('id', otherUids)
+      .then(({ data }) => {
+        if (!data) return;
+        const map: Record<string, string> = {};
+        data.forEach((u) => { map[u.id] = u.display_name || u.email || u.id; });
+        setUserNames(map);
+      });
+  }, [conversations, currentUid]);
+
   const renderItem = useCallback(
-    ({ item }: { item: Conversation }) => (
-      <ConversationItem conversation={item} currentUid={currentUid} />
-    ),
-    [currentUid],
+    ({ item }: { item: Conversation }) => {
+      const otherUid = item.participants.find((p) => p !== currentUid) ?? '';
+      return (
+        <ConversationItem
+          conversation={item}
+          currentUid={currentUid}
+          userName={userNames[otherUid] || otherUid}
+        />
+      );
+    },
+    [currentUid, userNames],
   );
 
   const keyExtractor = useCallback((item: Conversation) => item.id, []);

@@ -69,9 +69,9 @@ create table public.conversations (
   updated_at timestamptz default now()
 );
 alter table public.conversations enable row level security;
-create policy "Participants can read conversations" on public.conversations for select using (auth.uid() = any(participants));
-create policy "Participants can insert conversations" on public.conversations for insert with check (auth.uid() = any(participants));
-create policy "Participants can update conversations" on public.conversations for update using (auth.uid() = any(participants));
+create policy "Participants can read conversations" on public.conversations for select using (participants @> array[auth.uid()]);
+create policy "Participants can insert conversations" on public.conversations for insert with check (participants @> array[auth.uid()]);
+create policy "Participants can update conversations" on public.conversations for update using (participants @> array[auth.uid()]);
 
 -- Messages
 create table public.messages (
@@ -87,7 +87,10 @@ create table public.messages (
 );
 alter table public.messages enable row level security;
 create policy "Participants can read messages" on public.messages for select using (
-  auth.uid() = any((select participants from public.conversations where id = conversation_id))
+  exists (
+    select 1 from public.conversations
+    where id = conversation_id and participants @> array[auth.uid()]
+  )
 );
 create policy "Sender can insert messages" on public.messages for insert with check (auth.uid() = sender_id);
 create policy "Sender can update message status" on public.messages for update using (true);
@@ -103,9 +106,9 @@ create table public.groups (
   created_at timestamptz default now()
 );
 alter table public.groups enable row level security;
-create policy "Participants can read groups" on public.groups for select using (auth.uid() = any(participants));
+create policy "Participants can read groups" on public.groups for select using (participants @> array[auth.uid()]);
 create policy "Authenticated can create groups" on public.groups for insert with check (auth.uid() = created_by);
-create policy "Participants can update groups" on public.groups for update using (auth.uid() = any(participants));
+create policy "Participants can update groups" on public.groups for update using (participants @> array[auth.uid()]);
 
 -- Group messages
 create table public.group_messages (
@@ -118,11 +121,17 @@ create table public.group_messages (
 );
 alter table public.group_messages enable row level security;
 create policy "Participants can read group messages" on public.group_messages for select using (
-  auth.uid() = any((select participants from public.groups where id = group_id))
+  exists (
+    select 1 from public.groups
+    where id = group_id and participants @> array[auth.uid()]
+  )
 );
 create policy "Participants can insert group messages" on public.group_messages for insert with check (
   auth.uid() = sender_id and
-  auth.uid() = any((select participants from public.groups where id = group_id))
+  exists (
+    select 1 from public.groups
+    where id = group_id and participants @> array[auth.uid()]
+  )
 );
 
 -- Calls (WebRTC signaling)

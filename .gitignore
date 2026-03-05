@@ -30,7 +30,7 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files\n.env
+# Firebase config (contain secrets)\nGoogleService-Info.plist\ngoogle-services.json\n\n# local env files\n.env
 .env*.local
 
 # typescript

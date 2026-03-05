@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { setMessages, addPendingMessage, setConversations } from '@/store/slices/chat-slice';
+import { setMessages, addMessage, updateMessageStatus, addPendingMessage, setConversations } from '@/store/slices/chat-slice';
 import { encryptMessage, decryptMessage } from './encryption';
 import type { AppDispatch } from '@/store';
 import type { Message } from '@/store/slices/chat-slice';
@@ -53,24 +53,19 @@ export function subscribeToMessages(conversationId: string, dispatch: AppDispatc
           status: row.status ?? 'sent',
           conversationId,
         };
-        dispatch(setMessages({ conversationId, messages: [msg] }));
+        dispatch(addMessage(msg));
       },
     )
     .on(
       'postgres_changes',
-      { event: 'UPDATE', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
+      { event: 'UPDATE', schema: 'public', table: 'messages' },
       (payload) => {
         const row = payload.new as any;
-        dispatch(setMessages({
+        if (row.conversation_id !== conversationId) return;
+        dispatch(updateMessageStatus({
           conversationId,
-          messages: [{
-            id: row.id,
-            senderId: row.sender_id,
-            text: row.text,
-            createdAt: new Date(row.created_at).getTime(),
-            status: row.status,
-            conversationId,
-          }],
+          messageId: row.id,
+          status: row.status,
         }));
       },
     )
@@ -121,12 +116,15 @@ export async function sendMessageOrQueue(
 }
 
 export async function markAsSeen(conversationId: string, viewerUid: string): Promise<void> {
-  await supabase
+  const { error, data } = await supabase
     .from('messages')
     .update({ status: 'seen' })
     .eq('conversation_id', conversationId)
     .eq('status', 'sent')
-    .neq('sender_id', viewerUid);
+    .neq('sender_id', viewerUid)
+    .select('id');
+  if (error) console.error('[markAsSeen] error:', error.code, error.message);
+  else console.log('[markAsSeen] updated', data?.length ?? 0, 'messages to seen');
 }
 
 // --- Conversation helpers ---
@@ -237,16 +235,13 @@ export function subscribeToGroupMessages(groupId: string, dispatch: AppDispatch)
       { event: 'INSERT', schema: 'public', table: 'group_messages', filter: `group_id=eq.${groupId}` },
       (payload) => {
         const row = payload.new as any;
-        dispatch(setMessages({
+        dispatch(addMessage({
+          id: row.id,
+          senderId: row.sender_id,
+          text: row.text,
+          createdAt: new Date(row.created_at).getTime(),
+          status: 'sent',
           conversationId: groupId,
-          messages: [{
-            id: row.id,
-            senderId: row.sender_id,
-            text: row.text,
-            createdAt: new Date(row.created_at).getTime(),
-            status: 'sent',
-            conversationId: groupId,
-          }],
         }));
       },
     )

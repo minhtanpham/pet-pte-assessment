@@ -1,21 +1,39 @@
-import { useCallback, useEffect } from 'react';
-import { View, KeyboardAvoidingView, Platform, StyleSheet, Text } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { useDispatch, useSelector } from 'react-redux';
-import type { AppDispatch, RootState } from '@/store';
-import { selectMessages } from '@/store/slices/chat-slice';
-import { subscribeToGroupMessages, sendGroupMessage } from '@/lib/database';
-import { FlatList } from 'react-native';
-import { MessageBubble } from '@/components/chat/message-bubble';
-import { ChatInput } from '@/components/chat/chat-input';
-import type { Message } from '@/store/slices/chat-slice';
-import { GroupHeader } from '@/components/chat/group-header';
+import { ChatInput } from "@/components/chat/chat-input";
+import { MessageBubble } from "@/components/chat/message-bubble";
+import { sendGroupMessage, subscribeToGroupMessages } from "@/lib/database";
+import { supabase } from "@/lib/supabase";
+import type { AppDispatch, RootState } from "@/store";
+import type { Message } from "@/store/slices/chat-slice";
+import { selectMessages } from "@/store/slices/chat-slice";
+import { Stack, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import {
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function GroupChatScreen() {
   const { id: groupId } = useLocalSearchParams<{ id: string }>();
   const dispatch = useDispatch<AppDispatch>();
   const uid = useSelector((state: RootState) => state.auth.uid);
-  const messages = useSelector((state: RootState) => selectMessages(state, groupId));
+  const messages = useSelector((state: RootState) =>
+    selectMessages(state, groupId),
+  );
+  const [groupName, setGroupName] = useState("Group");
+
+  useEffect(() => {
+    supabase
+      .from("groups")
+      .select("name")
+      .eq("id", groupId)
+      .single()
+      .then(({ data }) => {
+        if (data?.name) setGroupName(data.name);
+      });
+  }, [groupId]);
 
   useEffect(() => {
     if (!groupId) return;
@@ -40,32 +58,40 @@ export default function GroupChatScreen() {
 
   const ITEM_HEIGHT = 64;
   const getItemLayout = useCallback(
-    (_: any, index: number) => ({ length: ITEM_HEIGHT, offset: ITEM_HEIGHT * index, index }),
+    (_: any, index: number) => ({
+      length: ITEM_HEIGHT,
+      offset: ITEM_HEIGHT * index,
+      index,
+    }),
     [],
   );
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={90}>
-      <FlatList
-        data={messages}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        getItemLayout={getItemLayout}
-        inverted
-        removeClippedSubviews
-        maxToRenderPerBatch={20}
-        windowSize={10}
-        contentContainerStyle={styles.listContent}
-      />
-      <ChatInput onSend={handleSend} />
-    </KeyboardAvoidingView>
+    <>
+      <Stack.Screen options={{ title: groupName }} />
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={90}
+      >
+        <FlatList
+          data={messages}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          getItemLayout={getItemLayout}
+          inverted
+          removeClippedSubviews
+          maxToRenderPerBatch={20}
+          windowSize={10}
+          contentContainerStyle={styles.listContent}
+        />
+        <ChatInput onSend={handleSend} />
+      </KeyboardAvoidingView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: "#F9FAFB" },
   listContent: { paddingHorizontal: 16, paddingVertical: 8 },
 });

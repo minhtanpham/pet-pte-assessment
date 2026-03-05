@@ -91,7 +91,12 @@ create policy "Participants can read messages" on public.messages for select usi
   )
 );
 create policy "Sender can insert messages" on public.messages for insert with check (auth.uid() = sender_id);
-create policy "Sender can update message status" on public.messages for update using (true);
+create policy "Participants can update message status" on public.messages for update using (
+  exists (
+    select 1 from public.conversations
+    where id = conversation_id and participants @> array[auth.uid()]
+  )
+);
 
 -- Groups
 create table public.groups (
@@ -151,7 +156,12 @@ create policy "Participants can access calls" on public.calls for all using (
 alter publication supabase_realtime add table public.messages;
 alter publication supabase_realtime add table public.conversations;
 alter publication supabase_realtime add table public.calls;
+alter publication supabase_realtime add table public.groups;
 alter publication supabase_realtime add table public.group_messages;
+
+-- Required for filtered UPDATE/DELETE realtime events (e.g. seen status)
+alter table public.messages replica identity full;
+alter table public.group_messages replica identity full;
 ```
 
 ### 3. Configure environment variables

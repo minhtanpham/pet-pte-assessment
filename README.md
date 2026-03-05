@@ -4,16 +4,16 @@ A real-time chat application built with [Expo](https://expo.dev) (expo-router), 
 
 ## Tech stack
 
-| Layer | Library |
-|-------|---------|
-| Framework | Expo 54 / React Native 0.81.5 |
-| Navigation | expo-router 6 (file-based) |
-| Backend | Supabase (Auth, PostgreSQL, Realtime) |
-| State | Redux Toolkit + Redux Persist |
-| Local storage | react-native-mmkv |
-| Session | expo-secure-store |
-| Video calls | react-native-webrtc |
-| Encryption | TweetNaCl (secretbox) |
+| Layer              | Library                                |
+| ------------------ | -------------------------------------- |
+| Framework          | Expo 54 / React Native 0.81.5          |
+| Navigation         | expo-router 6 (file-based)             |
+| Backend            | Supabase (Auth, PostgreSQL, Realtime)  |
+| State              | Redux Toolkit + Redux Persist          |
+| Local storage      | react-native-mmkv                      |
+| Session            | expo-secure-store                      |
+| Video calls        | react-native-webrtc                    |
+| Encryption         | TweetNaCl (secretbox)                  |
 | Push notifications | expo-notifications (Expo Push Service) |
 
 ---
@@ -22,17 +22,15 @@ A real-time chat application built with [Expo](https://expo.dev) (expo-router), 
 
 ### Required versions
 
-| Tool | Version used | Notes |
-|------|-------------|-------|
-| Node.js | 22.22.0 | LTS recommended |
-| npm | bundled with Node | — |
-| Ruby | 3.3.5 | Required by CocoaPods |
-| CocoaPods | 1.16.2 | `gem install cocoapods` |
-| Xcode | 26.3 | macOS Tahoe |
-| Swift | 6.2.4 | bundled with Xcode |
-| Python | 3.14.3 | for build scripts |
-
-> **Xcode note:** Firebase's native SDK (`@react-native-firebase`) is **not used** in this project. We migrated to the pure-JS Supabase SDK specifically to avoid gRPC / Swift 6 build incompatibilities introduced in Xcode 26.
+| Tool      | Version used      | Notes                   |
+| --------- | ----------------- | ----------------------- |
+| Node.js   | 22.22.0           | LTS recommended         |
+| npm       | bundled with Node | —                       |
+| Ruby      | 3.3.5             | Required by CocoaPods   |
+| CocoaPods | 1.16.2            | `gem install cocoapods` |
+| Xcode     | 26.3              | macOS Tahoe             |
+| Swift     | 6.2.4             | bundled with Xcode      |
+| Python    | 3.14.3            | for build scripts       |
 
 ---
 
@@ -107,7 +105,7 @@ create table public.groups (
 );
 alter table public.groups enable row level security;
 create policy "Participants can read groups" on public.groups for select using (participants @> array[auth.uid()]);
-create policy "Authenticated can create groups" on public.groups for insert with check (auth.uid() = created_by);
+create policy "Authenticated can create groups" on public.groups for insert with check (auth.role() = 'authenticated');
 create policy "Participants can update groups" on public.groups for update using (participants @> array[auth.uid()]);
 
 -- Group messages
@@ -213,12 +211,12 @@ Open the installed dev client on your simulator and connect via QR code or press
 
 ## When to re-run pod install + rebuild
 
-| Change | pod install | rebuild |
-|--------|-------------|---------|
-| Editing JS/TS code | No | No |
-| Changing app name, icon, splash | No | No |
-| Adding/removing a native package | Yes | Yes |
-| Changing permissions or plugins in `app.json` | Yes | Yes |
+| Change                                        | pod install | rebuild |
+| --------------------------------------------- | ----------- | ------- |
+| Editing JS/TS code                            | No          | No      |
+| Changing app name, icon, splash               | No          | No      |
+| Adding/removing a native package              | Yes         | Yes     |
+| Changing permissions or plugins in `app.json` | Yes         | Yes     |
 
 ---
 

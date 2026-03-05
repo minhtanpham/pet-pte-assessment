@@ -197,10 +197,13 @@ export async function searchUsers(query: string, currentUid: string) {
 
 // --- Group helpers ---
 
-export async function createGroup(name: string, participants: string[], createdBy: string): Promise<string> {
+export async function createGroup(name: string, participants: string[]): Promise<string> {
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) throw new Error('Not authenticated');
+
   const { data, error } = await supabase
     .from('groups')
-    .insert({ name, participants, created_by: createdBy })
+    .insert({ name, participants, created_by: user.id })
     .select('id')
     .single();
   if (error) throw error;

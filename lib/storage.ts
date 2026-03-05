@@ -1,7 +1,7 @@
-import { MMKV } from 'react-native-mmkv';
+import { createMMKV } from 'react-native-mmkv';
 import type { Storage as ReduxPersistStorage } from 'redux-persist';
 
-export const mmkv = new MMKV({ id: 'app-storage' });
+export const mmkv = createMMKV({ id: 'app-storage' });
 
 // Redux Persist adapter
 export const mmkvStorage: ReduxPersistStorage = {
@@ -14,7 +14,7 @@ export const mmkvStorage: ReduxPersistStorage = {
     return Promise.resolve(value ?? null);
   },
   removeItem: (key) => {
-    mmkv.delete(key);
+    mmkv.remove(key);
     return Promise.resolve();
   },
 };
@@ -33,5 +33,5 @@ export const Storage = {
   setObject: <T>(key: string, value: T): void => {
     mmkv.set(key, JSON.stringify(value));
   },
-  delete: (key: string): void => mmkv.delete(key),
+  delete: (key: string): void => { mmkv.remove(key); },
 };

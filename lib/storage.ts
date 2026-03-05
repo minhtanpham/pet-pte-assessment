@@ -1,19 +1,37 @@
 import { MMKV } from 'react-native-mmkv';
+import type { Storage as ReduxPersistStorage } from 'redux-persist';
 
-export const storage = new MMKV({ id: 'app-data' });
+export const mmkv = new MMKV({ id: 'app-storage' });
 
+// Redux Persist adapter
+export const mmkvStorage: ReduxPersistStorage = {
+  setItem: (key, value) => {
+    mmkv.set(key, value);
+    return Promise.resolve(true);
+  },
+  getItem: (key) => {
+    const value = mmkv.getString(key);
+    return Promise.resolve(value ?? null);
+  },
+  removeItem: (key) => {
+    mmkv.delete(key);
+    return Promise.resolve();
+  },
+};
+
+// Typed helpers for general app use
 export const Storage = {
-  getString: (key: string): string | undefined => storage.getString(key),
-  setString: (key: string, value: string): void => storage.set(key, value),
-  getBoolean: (key: string): boolean | undefined => storage.getBoolean(key),
-  setBoolean: (key: string, value: boolean): void => storage.set(key, value),
+  getString: (key: string): string | undefined => mmkv.getString(key),
+  setString: (key: string, value: string): void => mmkv.set(key, value),
+  getBoolean: (key: string): boolean | undefined => mmkv.getBoolean(key),
+  setBoolean: (key: string, value: boolean): void => mmkv.set(key, value),
   getObject: <T>(key: string): T | undefined => {
-    const raw = storage.getString(key);
+    const raw = mmkv.getString(key);
     if (!raw) return undefined;
     try { return JSON.parse(raw) as T; } catch { return undefined; }
   },
   setObject: <T>(key: string, value: T): void => {
-    storage.set(key, JSON.stringify(value));
+    mmkv.set(key, JSON.stringify(value));
   },
-  delete: (key: string): void => storage.delete(key),
+  delete: (key: string): void => mmkv.delete(key),
 };

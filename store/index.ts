@@ -1,30 +1,10 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
-import { MMKV } from 'react-native-mmkv';
-import { Storage } from 'redux-persist';
+import { mmkvStorage } from '@/lib/storage';
 
 import authReducer from './slices/auth-slice';
 import chatReducer from './slices/chat-slice';
 import networkReducer from './slices/network-slice';
-
-// MMKV instance
-export const mmkv = new MMKV({ id: 'app-storage' });
-
-// MMKV storage adapter for redux-persist
-const mmkvStorage: Storage = {
-  setItem: (key, value) => {
-    mmkv.set(key, value);
-    return Promise.resolve(true);
-  },
-  getItem: (key) => {
-    const value = mmkv.getString(key);
-    return Promise.resolve(value ?? null);
-  },
-  removeItem: (key) => {
-    mmkv.delete(key);
-    return Promise.resolve();
-  },
-};
 
 const rootReducer = combineReducers({
   auth: authReducer,

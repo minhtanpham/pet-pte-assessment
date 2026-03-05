@@ -1,7 +1,7 @@
 import nacl from 'tweetnacl';
 import { encodeBase64, decodeBase64, encodeUTF8, decodeUTF8 } from 'tweetnacl-util';
 import { Storage } from './storage';
-import firestore from '@react-native-firebase/firestore';
+import { supabase } from './supabase';
 
 const KEYPAIR_KEY = 'nacl_keypair';
 
@@ -32,14 +32,13 @@ export function getPublicKey(): string {
 
 export async function publishPublicKey(uid: string): Promise<void> {
   const publicKey = getPublicKey();
-  await firestore().collection('users').doc(uid).set({ publicKey }, { merge: true });
+  await supabase.from('users').update({ public_key: publicKey }).eq('id', uid);
 }
 
 export async function getRecipientPublicKey(uid: string): Promise<Uint8Array | null> {
-  const doc = await firestore().collection('users').doc(uid).get();
-  const key = doc.data()?.publicKey as string | undefined;
-  if (!key) return null;
-  return decodeBase64(key);
+  const { data } = await supabase.from('users').select('public_key').eq('id', uid).single();
+  if (!data?.public_key) return null;
+  return decodeBase64(data.public_key);
 }
 
 export function encryptMessage(text: string): {

@@ -11,9 +11,8 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSelector, useDispatch } from 'react-redux';
-import firestore from '@react-native-firebase/firestore';
 import type { RootState, AppDispatch } from '@/store';
-import { setConversations } from '@/store/slices/chat-slice';
+import { supabase } from '@/lib/supabase';
 import { createGroup } from '@/lib/database';
 
 interface Group {
@@ -35,19 +34,33 @@ export default function GroupsScreen() {
 
   useEffect(() => {
     if (!uid) return;
-    const unsubscribe = firestore()
-      .collection('groups')
-      .where('participants', 'array-contains', uid)
-      .orderBy('updatedAt', 'desc')
-      .onSnapshot((snap) => {
-        const data = snap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          updatedAt: doc.data().updatedAt?.toMillis() ?? 0,
-        })) as Group[];
-        setGroups(data);
-      });
-    return unsubscribe;
+
+    const fetchGroups = () => {
+      supabase
+        .from('groups')
+        .select('*')
+        .contains('participants', [uid])
+        .order('updated_at', { ascending: false })
+        .then(({ data }) => {
+          if (data) setGroups(data.map((g) => ({
+            id: g.id,
+            name: g.name,
+            participants: g.participants,
+            createdBy: g.created_by,
+            updatedAt: new Date(g.updated_at).getTime(),
+            lastMessage: g.last_message,
+          })));
+        });
+    };
+
+    fetchGroups();
+
+    const channel = supabase
+      .channel(`groups:${uid}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'groups' }, fetchGroups)
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [uid]);
 
   const handleCreate = useCallback(async () => {

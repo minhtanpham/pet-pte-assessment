@@ -1,3 +1,4 @@
+import { BorderRadius, FontSize, Palette, Spacing } from "@/constants";
 import { createGroup } from "@/lib/database";
 import { supabase } from "@/lib/supabase";
 import type { AppDispatch, RootState } from "@/store";
@@ -152,14 +153,14 @@ export default function GroupsScreen() {
             <TextInput
               style={styles.input}
               placeholder="Group name"
-              placeholderTextColor="#9BA1A6"
+              placeholderTextColor={Palette.grey500}
               value={groupName}
               onChangeText={setGroupName}
             />
             <TextInput
               style={styles.input}
               placeholder="Participant UIDs (comma-separated)"
-              placeholderTextColor="#9BA1A6"
+              placeholderTextColor={Palette.grey500}
               value={participantUids}
               onChangeText={setParticipantUids}
               multiline
@@ -178,7 +179,7 @@ export default function GroupsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1, backgroundColor: Palette.white },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -187,39 +188,39 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: Palette.grey300,
   },
-  title: { fontSize: 28, fontWeight: "700", color: "#11181C" },
+  title: { fontSize: FontSize.title, fontWeight: "700", color: Palette.black },
   iconButton: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: "#0a7ea4",
+    borderRadius: BorderRadius.xl,
+    backgroundColor: Palette.primary,
     justifyContent: "center",
     alignItems: "center",
   },
-  iconButtonText: { color: "#fff", fontSize: 22, lineHeight: 28 },
+  iconButtonText: { color: Palette.white, fontSize: FontSize.xxl, lineHeight: 28 },
   item: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: Palette.grey300,
     gap: 12,
   },
   avatar: {
     width: 48,
     height: 48,
-    borderRadius: 24,
-    backgroundColor: "#7C3AED",
+    borderRadius: BorderRadius.round,
+    backgroundColor: Palette.purple,
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarText: { color: "#fff", fontSize: 18, fontWeight: "600" },
+  avatarText: { color: Palette.white, fontSize: FontSize.xl, fontWeight: "600" },
   content: { flex: 1 },
-  name: { fontSize: 15, fontWeight: "600", color: "#11181C" },
-  meta: { fontSize: 13, color: "#687076", marginTop: 2 },
+  name: { fontSize: FontSize.md, fontWeight: "600", color: Palette.black },
+  meta: { fontSize: FontSize.sm, color: Palette.grey600, marginTop: 2 },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
@@ -227,13 +228,13 @@ const styles = StyleSheet.create({
     paddingTop: 80,
   },
   emptyText: {
-    fontSize: 18,
+    fontSize: FontSize.xl,
     fontWeight: "600",
-    color: "#11181C",
+    color: Palette.black,
     marginBottom: 8,
   },
-  emptySubtext: { fontSize: 14, color: "#687076" },
-  modal: { flex: 1, backgroundColor: "#fff", paddingTop: 20 },
+  emptySubtext: { fontSize: FontSize.sm, color: Palette.grey600 },
+  modal: { flex: 1, backgroundColor: Palette.white, paddingTop: 20 },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -241,27 +242,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: Palette.grey300,
   },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: "#11181C" },
-  modalClose: { color: "#0a7ea4", fontSize: 16 },
+  modalTitle: { fontSize: FontSize.xl, fontWeight: "700", color: Palette.black },
+  modalClose: { color: Palette.primary, fontSize: FontSize.lg },
   form: { padding: 16, gap: 12 },
   input: {
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 12,
+    borderColor: Palette.grey300,
+    borderRadius: BorderRadius.md,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    fontSize: 15,
-    color: "#11181C",
-    backgroundColor: "#F9FAFB",
+    fontSize: FontSize.md,
+    color: Palette.black,
+    backgroundColor: Palette.grey100,
   },
   createButton: {
-    backgroundColor: "#0a7ea4",
-    borderRadius: 12,
+    backgroundColor: Palette.primary,
+    borderRadius: BorderRadius.md,
     paddingVertical: 16,
     alignItems: "center",
     marginTop: 8,
   },
-  createButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  createButtonText: { color: Palette.white, fontSize: FontSize.lg, fontWeight: "600" },
 });

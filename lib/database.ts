@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { Query } from '@/constants';
 import { setMessages, addMessage, updateMessageStatus, addPendingMessage, setConversations } from '@/store/slices/chat-slice';
 import type { AppDispatch } from '@/store';
 import type { Message } from '@/store/slices/chat-slice';
@@ -12,7 +13,7 @@ export function subscribeToMessages(conversationId: string, dispatch: AppDispatc
     .select('*')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: false })
-    .limit(100)
+    .limit(Query.messageLimit)
     .then(({ data }) => {
       if (!data) return;
       const msgs: Message[] = data.map((row) => ({
@@ -173,7 +174,7 @@ export async function searchUsers(query: string, currentUid: string) {
     .select('id, email, display_name')
     .ilike('display_name', `%${query}%`)
     .neq('id', currentUid)
-    .limit(20);
+    .limit(Query.userSearchLimit);
   return (data ?? []).map((u) => ({ uid: u.id, email: u.email, displayName: u.display_name }));
 }
 
@@ -198,7 +199,7 @@ export function subscribeToGroupMessages(groupId: string, dispatch: AppDispatch)
     .select('*')
     .eq('group_id', groupId)
     .order('created_at', { ascending: false })
-    .limit(100)
+    .limit(Query.messageLimit)
     .then(({ data }) => {
       if (!data) return;
       const msgs: Message[] = data.map((row) => ({

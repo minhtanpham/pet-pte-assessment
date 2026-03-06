@@ -1,3 +1,4 @@
+import { BorderRadius, FontSize, Palette, Spacing } from '@/constants';
 import { StyleSheet, Text, type TextProps } from 'react-native';
 
 import { useThemeColor } from '@/hooks';
@@ -55,6 +56,6 @@ const styles = StyleSheet.create({
   link: {
     lineHeight: 30,
     fontSize: 16,
-    color: '#0a7ea4',
+    color: Palette.primary,
   },
 });

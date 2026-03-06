@@ -1,3 +1,4 @@
+import { BorderRadius, FontSize, Palette, Spacing } from '@/constants';
 import React, { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { Message } from '@/store/slices/chat-slice';
@@ -56,19 +57,19 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   bubbleOwn: {
-    backgroundColor: '#0a7ea4',
+    backgroundColor: Palette.primary,
     borderBottomRightRadius: 4,
   },
   bubbleOther: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Palette.grey200,
     borderBottomLeftRadius: 4,
   },
   text: { fontSize: 15, lineHeight: 20 },
-  textOwn: { color: '#fff' },
-  textOther: { color: '#11181C' },
+  textOwn: { color: Palette.white },
+  textOther: { color: Palette.black },
   meta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   time: { fontSize: 11 },
   timeOwn: { color: 'rgba(255,255,255,0.7)' },
-  timeOther: { color: '#9BA1A6' },
+  timeOther: { color: Palette.grey500 },
   status: { fontSize: 11, color: 'rgba(255,255,255,0.8)' },
 });

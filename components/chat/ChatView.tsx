@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { Stack } from "expo-router";
+import { Chat, Palette, Spacing } from "@/constants";
 import type { Message } from "@/store/slices/chat-slice";
 import { MessageBubble } from "./MessageBubble";
 import { ChatInput } from "./ChatInput";
@@ -20,8 +21,6 @@ interface Props {
   headerRight?: () => React.ReactNode;
   isOffline?: boolean;
 }
-
-const ITEM_HEIGHT = 64;
 
 export const ChatView = memo(function ChatView({
   title,
@@ -40,8 +39,8 @@ export const ChatView = memo(function ChatView({
 
   const getItemLayout = useCallback(
     (_: any, index: number) => ({
-      length: ITEM_HEIGHT,
-      offset: ITEM_HEIGHT * index,
+      length: Chat.messageItemHeight,
+      offset: Chat.messageItemHeight * index,
       index,
     }),
     [],
@@ -53,7 +52,7 @@ export const ChatView = memo(function ChatView({
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={90}
+        keyboardVerticalOffset={Chat.keyboardVerticalOffset}
       >
         {isOffline && (
           <View style={styles.offlineBanner}>
@@ -69,8 +68,8 @@ export const ChatView = memo(function ChatView({
           getItemLayout={getItemLayout}
           inverted
           removeClippedSubviews
-          maxToRenderPerBatch={20}
-          windowSize={10}
+          maxToRenderPerBatch={Chat.maxToRenderPerBatch}
+          windowSize={Chat.windowSize}
           contentContainerStyle={styles.listContent}
         />
         <ChatInput onSend={onSend} />
@@ -80,14 +79,14 @@ export const ChatView = memo(function ChatView({
 });
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F9FAFB" },
-  listContent: { paddingHorizontal: 16, paddingVertical: 8 },
+  container: { flex: 1, backgroundColor: Palette.grey100 },
+  listContent: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm },
   offlineBanner: {
-    backgroundColor: "#FEF3C7",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    backgroundColor: Palette.warning,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: "#FDE68A",
+    borderBottomColor: Palette.warningBorder,
   },
-  offlineText: { color: "#92400E", fontSize: 13, textAlign: "center" },
+  offlineText: { color: Palette.warningText, fontSize: 13, textAlign: "center" },
 });

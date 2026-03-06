@@ -1,3 +1,4 @@
+import { BorderRadius, FontSize, Palette, Spacing } from '@/constants';
 import { useState, useCallback } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { IconSymbol } from '@/components/ui';
@@ -22,7 +23,7 @@ export function ChatInput({ onSend, disabled }: Props) {
       <TextInput
         style={styles.input}
         placeholder="Message..."
-        placeholderTextColor="#9BA1A6"
+        placeholderTextColor={Palette.grey500
         value={text}
         onChangeText={setText}
         multiline
@@ -34,7 +35,7 @@ export function ChatInput({ onSend, disabled }: Props) {
         style={[styles.sendButton, (!text.trim() || disabled) && styles.sendButtonDisabled]}
         onPress={handleSend}
         disabled={!text.trim() || disabled}>
-        <IconSymbol name="paperplane.fill" size={20} color="#fff" />
+        <IconSymbol name="paperplane.fill" size={20} color={Palette.white />
       </TouchableOpacity>
     </View>
   );
@@ -47,32 +48,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     paddingBottom: Platform.OS === 'ios' ? 24 : 8,
-    backgroundColor: '#fff',
+    backgroundColor: Palette.white,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: Palette.grey300,
     gap: 8,
   },
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: Palette.grey300,
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 15,
-    color: '#11181C',
+    color: Palette.black,
     maxHeight: 120,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: Palette.grey100,
   },
   sendButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#0a7ea4',
+    backgroundColor: Palette.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   sendButtonDisabled: {
-    backgroundColor: '#D1D5DB',
+    backgroundColor: Palette.grey400,
   },
 });

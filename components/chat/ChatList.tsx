@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { Chat, FontSize, Palette, Spacing } from '@/constants';
 import type { Conversation } from '@/store/slices/chat-slice';
 
 interface Props {
@@ -15,9 +16,7 @@ interface ConversationItemProps {
   userName: string;
 }
 
-const ITEM_HEIGHT = 72;
-
-const ConversationItem = memo(function ConversationItem({ conversation, currentUid, userName }: ConversationItemProps) {
+const ConversationItem = memo(function ConversationItem({ conversation, userName }: ConversationItemProps) {
   const formattedTime = conversation.updatedAt
     ? new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(
         new Date(conversation.updatedAt),
@@ -33,9 +32,7 @@ const ConversationItem = memo(function ConversationItem({ conversation, currentU
       </View>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.name} numberOfLines={1}>
-            {userName}
-          </Text>
+          <Text style={styles.name} numberOfLines={1}>{userName}</Text>
           <Text style={styles.time}>{formattedTime}</Text>
         </View>
         <Text style={styles.lastMessage} numberOfLines={1}>
@@ -88,7 +85,11 @@ export const ChatList = memo(function ChatList({ conversations, currentUid }: Pr
   const keyExtractor = useCallback((item: Conversation) => item.id, []);
 
   const getItemLayout = useCallback(
-    (_: any, index: number) => ({ length: ITEM_HEIGHT, offset: ITEM_HEIGHT * index, index }),
+    (_: any, index: number) => ({
+      length: Chat.conversationItemHeight,
+      offset: Chat.conversationItemHeight * index,
+      index,
+    }),
     [],
   );
 
@@ -99,8 +100,8 @@ export const ChatList = memo(function ChatList({ conversations, currentUid }: Pr
       keyExtractor={keyExtractor}
       getItemLayout={getItemLayout}
       removeClippedSubviews
-      maxToRenderPerBatch={15}
-      windowSize={10}
+      maxToRenderPerBatch={Chat.maxToRenderPerBatch}
+      windowSize={Chat.windowSize}
       contentContainerStyle={conversations.length === 0 && styles.emptyContainer}
       ListEmptyComponent={
         <View style={styles.emptyContent}>
@@ -116,30 +117,30 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    height: ITEM_HEIGHT,
-    backgroundColor: '#fff',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    height: Chat.conversationItemHeight,
+    backgroundColor: Palette.white,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: Palette.grey300,
   },
   avatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#0a7ea4',
+    backgroundColor: Palette.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: Spacing.md,
   },
-  avatarText: { color: '#fff', fontSize: 18, fontWeight: '600' },
+  avatarText: { color: Palette.white, fontSize: FontSize.xl, fontWeight: '600' },
   content: { flex: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 },
-  name: { fontSize: 15, fontWeight: '600', color: '#11181C', flex: 1 },
-  time: { fontSize: 12, color: '#9BA1A6', marginLeft: 8 },
-  lastMessage: { fontSize: 13, color: '#687076' },
+  name: { fontSize: FontSize.md, fontWeight: '600', color: Palette.black, flex: 1 },
+  time: { fontSize: FontSize.xs, color: Palette.grey500, marginLeft: Spacing.sm },
+  lastMessage: { fontSize: FontSize.sm, color: Palette.grey600 },
   emptyContainer: { flex: 1 },
   emptyContent: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 80 },
-  emptyText: { fontSize: 18, fontWeight: '600', color: '#11181C', marginBottom: 8 },
-  emptySubtext: { fontSize: 14, color: '#687076' },
+  emptyText: { fontSize: FontSize.xl, fontWeight: '600', color: Palette.black, marginBottom: Spacing.sm },
+  emptySubtext: { fontSize: FontSize.sm, color: Palette.grey600 },
 });

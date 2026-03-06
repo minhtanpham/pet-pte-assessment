@@ -1,3 +1,4 @@
+import { BorderRadius, FontSize, Palette, Spacing } from '@/constants';
 import { View, Text, StyleSheet } from 'react-native';
 
 interface Props {
@@ -16,7 +17,7 @@ export function GroupHeader({ name, participants }: Props) {
           </View>
         ))}
         {participants.length > 4 && (
-          <View style={[styles.avatar, { marginLeft: -8, backgroundColor: '#9BA1A6' }]}>
+          <View style={[styles.avatar, { marginLeft: -8, backgroundColor: Palette.grey500 }]}>
             <Text style={styles.avatarText}>+{participants.length - 4}</Text>
           </View>
         )}
@@ -27,17 +28,17 @@ export function GroupHeader({ name, participants }: Props) {
 
 const styles = StyleSheet.create({
   container: { alignItems: 'center', gap: 4 },
-  name: { fontSize: 16, fontWeight: '600', color: '#11181C' },
+  name: { fontSize: 16, fontWeight: '600', color: Palette.black },
   avatars: { flexDirection: 'row' },
   avatar: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#7C3AED',
+    backgroundColor: Palette.purple,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#fff',
+    borderColor: Palette.white,
   },
-  avatarText: { color: '#fff', fontSize: 10, fontWeight: '600' },
+  avatarText: { color: Palette.white, fontSize: 10, fontWeight: '600' },
 });

@@ -1,3 +1,4 @@
+import { BorderRadius, FontSize, Palette, Spacing } from '@/constants';
 import { useEffect, useCallback } from 'react';
 import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -44,7 +45,7 @@ export default function CallScreen() {
         />
       ) : (
         <View style={styles.waitingContainer}>
-          <ActivityIndicator size="large" color="#fff" />
+          <ActivityIndicator size="large" color={Palette.white />
           <Text style={styles.waitingText}>
             {callStatus === 'ringing' ? 'Ringing...' : 'Connecting...'}
           </Text>
@@ -72,7 +73,7 @@ export default function CallScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1a1a2e' },
+  container: { flex: 1, backgroundColor: Palette.callBackground },
   remoteStream: { ...StyleSheet.absoluteFillObject },
   waitingContainer: {
     flex: 1,
@@ -80,7 +81,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 16,
   },
-  waitingText: { color: '#fff', fontSize: 18 },
+  waitingText: { color: Palette.white, fontSize: 18 },
   localStream: {
     position: 'absolute',
     top: 60,
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: Palette.white,
     overflow: 'hidden',
   },
 });

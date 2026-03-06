@@ -1,3 +1,4 @@
+import { BorderRadius, FontSize, Palette, Spacing } from '@/constants';
 import { useState } from 'react';
 import {
   View,
@@ -52,7 +53,7 @@ export default function RegisterScreen() {
       <TextInput
         style={styles.input}
         placeholder="Display Name"
-        placeholderTextColor="#9BA1A6"
+        placeholderTextColor={Palette.grey500
         autoCapitalize="words"
         value={displayName}
         onChangeText={setDisplayName}
@@ -60,7 +61,7 @@ export default function RegisterScreen() {
       <TextInput
         style={styles.input}
         placeholder="Email"
-        placeholderTextColor="#9BA1A6"
+        placeholderTextColor={Palette.grey500
         keyboardType="email-address"
         autoCapitalize="none"
         autoComplete="email"
@@ -70,7 +71,7 @@ export default function RegisterScreen() {
       <TextInput
         style={styles.input}
         placeholder="Password (min 6 characters)"
-        placeholderTextColor="#9BA1A6"
+        placeholderTextColor={Palette.grey500
         secureTextEntry
         autoComplete="new-password"
         value={password}
@@ -78,7 +79,7 @@ export default function RegisterScreen() {
       />
 
       <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Create Account</Text>}
+        {loading ? <ActivityIndicator color={Palette.white /> : <Text style={styles.buttonText}>Create Account</Text>}
       </TouchableOpacity>
 
       <Link href="/(auth)/login" asChild>
@@ -95,32 +96,32 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
-    backgroundColor: '#fff',
+    backgroundColor: Palette.white,
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#11181C',
+    color: Palette.black,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#687076',
+    color: Palette.grey600,
     marginBottom: 32,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: Palette.grey300,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#11181C',
+    color: Palette.black,
     marginBottom: 16,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: Palette.grey100,
   },
   button: {
-    backgroundColor: '#0a7ea4',
+    backgroundColor: Palette.primary,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -128,7 +129,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   buttonText: {
-    color: '#fff',
+    color: Palette.white,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -137,11 +138,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   linkText: {
-    color: '#687076',
+    color: Palette.grey600,
     fontSize: 14,
   },
   linkBold: {
-    color: '#0a7ea4',
+    color: Palette.primary,
     fontWeight: '600',
   },
 });

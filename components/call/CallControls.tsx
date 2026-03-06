@@ -1,3 +1,4 @@
+import { BorderRadius, FontSize, Palette, Spacing } from '@/constants';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { IconSymbol } from '@/components/ui';
 
@@ -18,12 +19,12 @@ export function CallControls({ isMuted, isCameraOff, onToggleMute, onToggleCamer
         <IconSymbol
           name={isMuted ? 'mic.slash.fill' : 'mic.fill'}
           size={24}
-          color="#fff"
+          color={Palette.white
         />
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.endButton} onPress={onEndCall}>
-        <IconSymbol name="phone.down.fill" size={28} color="#fff" />
+        <IconSymbol name="phone.down.fill" size={28} color={Palette.white />
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -32,7 +33,7 @@ export function CallControls({ isMuted, isCameraOff, onToggleMute, onToggleCamer
         <IconSymbol
           name={isCameraOff ? 'video.slash.fill' : 'video.fill'}
           size={24}
-          color="#fff"
+          color={Palette.white
         />
       </TouchableOpacity>
     </View>
@@ -65,7 +66,7 @@ const styles = StyleSheet.create({
     width: 68,
     height: 68,
     borderRadius: 34,
-    backgroundColor: '#EF4444',
+    backgroundColor: Palette.danger,
     justifyContent: 'center',
     alignItems: 'center',
   },

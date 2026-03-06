@@ -1,41 +1,72 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+// ---------------------------------------------------------------------------
+// Brand / Palette
+// ---------------------------------------------------------------------------
+export const Palette = {
+  primary: '#0a7ea4',
+  primaryDark: '#085f7a',
+  white: '#fff',
+  black: '#11181C',
+  // Greys
+  grey100: '#F9FAFB',
+  grey200: '#F3F4F6',
+  grey300: '#E5E7EB',
+  grey400: '#D1D5DB',
+  grey500: '#9BA1A6',
+  grey600: '#687076',
+  grey700: '#808080',
+  // Semantic
+  danger: '#EF4444',
+  warning: '#FEF3C7',
+  warningBorder: '#FDE68A',
+  warningText: '#92400E',
+  // Group avatar
+  purple: '#7C3AED',
+  // Call screen background
+  callBackground: '#1a1a2e',
+} as const;
 
+// ---------------------------------------------------------------------------
+// Theme colors (light / dark mode)
+// ---------------------------------------------------------------------------
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: Palette.black,
+    background: Palette.white,
+    tint: Palette.primary,
+    icon: Palette.grey600,
+    tabIconDefault: Palette.grey600,
+    tabIconSelected: Palette.primary,
   },
   dark: {
     text: '#ECEDEE',
     background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    tint: Palette.white,
+    icon: Palette.grey500,
+    tabIconDefault: Palette.grey500,
+    tabIconSelected: Palette.white,
   },
-};
+} as const;
+
+// ---------------------------------------------------------------------------
+// Typography
+// ---------------------------------------------------------------------------
+export const FontSize = {
+  xs: 11,
+  sm: 13,
+  md: 15,
+  lg: 16,
+  xl: 18,
+  xxl: 22,
+  title: 28,
+} as const;
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
@@ -51,3 +82,44 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+// ---------------------------------------------------------------------------
+// Spacing / Layout
+// ---------------------------------------------------------------------------
+export const Spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+} as const;
+
+export const BorderRadius = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 18,
+  round: 24,
+  pill: 9999,
+} as const;
+
+// ---------------------------------------------------------------------------
+// Chat / FlatList performance
+// ---------------------------------------------------------------------------
+export const Chat = {
+  messageItemHeight: 64,
+  conversationItemHeight: 72,
+  keyboardVerticalOffset: 90,
+  maxToRenderPerBatch: 20,
+  windowSize: 10,
+} as const;
+
+// ---------------------------------------------------------------------------
+// Database / Query
+// ---------------------------------------------------------------------------
+export const Query = {
+  messageLimit: 100,
+  userSearchLimit: 20,
+} as const;

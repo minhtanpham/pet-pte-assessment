@@ -1,3 +1,4 @@
+import { BorderRadius, Palette } from "@/constants";
 import { ChatView } from "@/components/chat";
 import {
   markAsSeen,
@@ -113,10 +114,10 @@ export default function ChatScreen() {
 
 const styles = StyleSheet.create({
   callButton: {
-    backgroundColor: "#0a7ea4",
-    borderRadius: 16,
+    backgroundColor: Palette.primary,
+    borderRadius: BorderRadius.lg,
     paddingHorizontal: 12,
     paddingVertical: 5,
   },
-  callButtonText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+  callButtonText: { color: Palette.white, fontSize: 13, fontWeight: "600" },
 });

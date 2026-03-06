@@ -1,3 +1,4 @@
+import { BorderRadius, FontSize, Palette, Spacing } from '@/constants';
 import { useEffect, useState, useCallback } from 'react';
 import {
   View,
@@ -99,7 +100,7 @@ export default function ChatsScreen() {
             <TextInput
               style={styles.searchInput}
               placeholder="Search by display name..."
-              placeholderTextColor="#9BA1A6"
+              placeholderTextColor={Palette.grey500}
               value={searchQuery}
               onChangeText={setSearchQuery}
               onSubmitEditing={handleSearch}
@@ -107,7 +108,7 @@ export default function ChatsScreen() {
             />
             <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
               {searching ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={Palette.white} />
               ) : (
                 <Text style={styles.searchButtonText}>Search</Text>
               )}
@@ -134,7 +135,7 @@ export default function ChatsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: Palette.white },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -143,23 +144,23 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: Palette.grey300,
   },
-  title: { fontSize: 28, fontWeight: '700', color: '#11181C' },
-  subtitle: { fontSize: 13, color: '#687076', marginTop: 2 },
+  title: { fontSize: FontSize.title, fontWeight: '700', color: Palette.black },
+  subtitle: { fontSize: FontSize.sm, color: Palette.grey600, marginTop: 2 },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   iconButton: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: '#0a7ea4',
+    borderRadius: BorderRadius.xl,
+    backgroundColor: Palette.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  iconButtonText: { color: '#fff', fontSize: 22, lineHeight: 28 },
+  iconButtonText: { color: Palette.white, fontSize: FontSize.xxl, lineHeight: 28 },
   logoutButton: { paddingHorizontal: 12, paddingVertical: 6 },
-  logoutText: { color: '#EF4444', fontSize: 14, fontWeight: '500' },
-  modal: { flex: 1, backgroundColor: '#fff', paddingTop: 20 },
+  logoutText: { color: Palette.danger, fontSize: FontSize.sm, fontWeight: '500' },
+  modal: { flex: 1, backgroundColor: Palette.white, paddingTop: 20 },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -167,47 +168,47 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: Palette.grey300,
   },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#11181C' },
-  modalClose: { color: '#0a7ea4', fontSize: 16 },
+  modalTitle: { fontSize: FontSize.xl, fontWeight: '700', color: Palette.black },
+  modalClose: { color: Palette.primary, fontSize: FontSize.lg },
   searchRow: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
   searchInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
+    borderColor: Palette.grey300,
+    borderRadius: BorderRadius.md,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    fontSize: 15,
-    color: '#11181C',
-    backgroundColor: '#F9FAFB',
+    fontSize: FontSize.md,
+    color: Palette.black,
+    backgroundColor: Palette.grey100,
   },
   searchButton: {
-    backgroundColor: '#0a7ea4',
-    borderRadius: 12,
+    backgroundColor: Palette.primary,
+    borderRadius: BorderRadius.md,
     paddingHorizontal: 16,
     justifyContent: 'center',
   },
-  searchButtonText: { color: '#fff', fontWeight: '600' },
+  searchButtonText: { color: Palette.white, fontWeight: '600' },
   userItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: Palette.grey300,
     gap: 12,
   },
   userAvatar: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: '#0a7ea4',
+    borderRadius: BorderRadius.round,
+    backgroundColor: Palette.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  userAvatarText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  userName: { fontSize: 15, fontWeight: '600', color: '#11181C' },
-  userEmail: { fontSize: 13, color: '#687076' },
+  userAvatarText: { color: Palette.white, fontSize: FontSize.lg, fontWeight: '600' },
+  userName: { fontSize: FontSize.md, fontWeight: '600', color: Palette.black },
+  userEmail: { fontSize: FontSize.sm, color: Palette.grey600 },
 });

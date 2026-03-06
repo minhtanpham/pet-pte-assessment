@@ -1,4 +1,5 @@
-import { BorderRadius, FontSize, Palette, Spacing } from "@/constants";
+import { BorderRadius, FontSize, Layout, Palette, Spacing } from "@/constants";
+import { ScreenContainer } from "@/components/ui";
 import { createGroup } from "@/lib/database";
 import { supabase } from "@/lib/supabase";
 import type { AppDispatch, RootState } from "@/store";
@@ -96,7 +97,7 @@ export default function GroupsScreen() {
   }, [groupName, selectedParticipantUids, uid]);
 
   return (
-    <View style={styles.container}>
+    <ScreenContainer edges={['top']} backgroundColor={Palette.white}>
       <View style={styles.header}>
         <Text style={styles.title}>Groups</Text>
         <TouchableOpacity
@@ -148,18 +149,17 @@ export default function GroupsScreen() {
         onCreate={handleCreate}
         onClose={() => setShowCreate(false)}
       />
-    </View>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Palette.white },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingTop: 60,
+    paddingTop: Layout.headerTopPadding,
     paddingBottom: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: Palette.grey300,

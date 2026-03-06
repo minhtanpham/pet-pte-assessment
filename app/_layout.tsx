@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { ActivityIndicator, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 
 import { useColorScheme } from '@/hooks';
@@ -107,12 +108,14 @@ function RootLayoutInner() {
 
 export default function RootLayout() {
   return (
-    <Provider store={store}>
-      <PersistGate
-        loading={<View style={{ flex: 1 }}><ActivityIndicator style={{ flex: 1 }} /></View>}
-        persistor={persistor}>
-        <RootLayoutInner />
-      </PersistGate>
-    </Provider>
+    <SafeAreaProvider>
+      <Provider store={store}>
+        <PersistGate
+          loading={<View style={{ flex: 1 }}><ActivityIndicator style={{ flex: 1 }} /></View>}
+          persistor={persistor}>
+          <RootLayoutInner />
+        </PersistGate>
+      </Provider>
+    </SafeAreaProvider>
   );
 }

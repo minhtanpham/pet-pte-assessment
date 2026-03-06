@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import { Chat, Palette, Spacing } from "@/constants";
 import type { Message } from "@/store/slices/chat-slice";
@@ -73,7 +74,9 @@ export const ChatView = memo(function ChatView({
           initialNumToRender={Chat.initialNumToRender}
           contentContainerStyle={styles.listContent}
         />
-        <ChatInput onSend={onSend} />
+        <SafeAreaView edges={['bottom']} style={styles.inputSafeArea}>
+          <ChatInput onSend={onSend} />
+        </SafeAreaView>
       </KeyboardAvoidingView>
     </>
   );
@@ -81,6 +84,7 @@ export const ChatView = memo(function ChatView({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Palette.grey100 },
+  inputSafeArea: { backgroundColor: Palette.white },
   listContent: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm },
   offlineBanner: {
     backgroundColor: Palette.warning,

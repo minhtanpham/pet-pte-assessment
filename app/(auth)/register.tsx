@@ -13,6 +13,7 @@ import {
   TextInput,
   TouchableOpacity,
 } from "react-native";
+import { ScreenContainer } from "@/components/ui";
 import { useDispatch } from "react-redux";
 
 export default function RegisterScreen() {
@@ -43,6 +44,7 @@ export default function RegisterScreen() {
   };
 
   return (
+    <ScreenContainer>
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -99,6 +101,7 @@ export default function RegisterScreen() {
         </TouchableOpacity>
       </Link>
     </KeyboardAvoidingView>
+    </ScreenContainer>
   );
 }
 
@@ -107,7 +110,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     paddingHorizontal: 24,
-    backgroundColor: Palette.white,
   },
   title: {
     fontSize: 28,

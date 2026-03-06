@@ -1,13 +1,7 @@
 import { IconSymbol } from "@/components/ui";
-import { Palette } from "@/constants";
+import { Layout, Palette } from "@/constants";
 import { useCallback, useState } from "react";
-import {
-  Platform,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 
 interface Props {
   onSend: (text: string) => void;
@@ -56,8 +50,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    paddingBottom: Platform.OS === "ios" ? 24 : 8,
+    paddingVertical: Layout.inputBottomPadding,
     backgroundColor: Palette.white,
     borderTopWidth: 1,
     borderTopColor: Palette.grey300,

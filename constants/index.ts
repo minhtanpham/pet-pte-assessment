@@ -106,6 +106,16 @@ export const BorderRadius = {
 } as const;
 
 // ---------------------------------------------------------------------------
+// Layout
+// ---------------------------------------------------------------------------
+export const Layout = {
+  /** Vertical padding between the safe-area top edge and the screen header title */
+  headerTopPadding: 12,
+  /** Bottom padding inside the chat input bar (minimum, used when safe area bottom is 0) */
+  inputBottomPadding: 8,
+} as const;
+
+// ---------------------------------------------------------------------------
 // Chat / FlatList performance
 // ---------------------------------------------------------------------------
 export const Chat = {

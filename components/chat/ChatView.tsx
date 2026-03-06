@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import { Chat, Palette, Spacing } from "@/constants";
+import { LoadingOverlay } from "@/components/ui";
 import type { Message } from "@/store/slices/chat-slice";
 import { MessageBubble } from "./MessageBubble";
 import { ChatInput } from "./ChatInput";
@@ -21,6 +22,7 @@ interface Props {
   onSend: (text: string) => void;
   headerRight?: () => React.ReactNode;
   isOffline?: boolean;
+  isLoading?: boolean;
 }
 
 export const ChatView = memo(function ChatView({
@@ -30,6 +32,7 @@ export const ChatView = memo(function ChatView({
   onSend,
   headerRight,
   isOffline,
+  isLoading,
 }: Props) {
   const renderItem = useCallback(
     ({ item }: { item: Message }) => (
@@ -55,28 +58,34 @@ export const ChatView = memo(function ChatView({
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Chat.keyboardVerticalOffset}
       >
-        {isOffline && (
-          <View style={styles.offlineBanner}>
-            <Text style={styles.offlineText}>
-              You are offline. Messages will be sent when reconnected.
-            </Text>
-          </View>
+        {isLoading ? (
+          <LoadingOverlay />
+        ) : (
+          <>
+            {isOffline && (
+              <View style={styles.offlineBanner}>
+                <Text style={styles.offlineText}>
+                  You are offline. Messages will be sent when reconnected.
+                </Text>
+              </View>
+            )}
+            <FlatList
+              data={messages}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id}
+              getItemLayout={getItemLayout}
+              inverted
+              removeClippedSubviews
+              maxToRenderPerBatch={Chat.maxToRenderPerBatch}
+              windowSize={Chat.windowSize}
+              initialNumToRender={Chat.initialNumToRender}
+              contentContainerStyle={styles.listContent}
+            />
+            <SafeAreaView edges={['bottom']} style={styles.inputSafeArea}>
+              <ChatInput onSend={onSend} />
+            </SafeAreaView>
+          </>
         )}
-        <FlatList
-          data={messages}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          getItemLayout={getItemLayout}
-          inverted
-          removeClippedSubviews
-          maxToRenderPerBatch={Chat.maxToRenderPerBatch}
-          windowSize={Chat.windowSize}
-          initialNumToRender={Chat.initialNumToRender}
-          contentContainerStyle={styles.listContent}
-        />
-        <SafeAreaView edges={['bottom']} style={styles.inputSafeArea}>
-          <ChatInput onSend={onSend} />
-        </SafeAreaView>
       </KeyboardAvoidingView>
     </>
   );

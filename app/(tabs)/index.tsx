@@ -1,12 +1,12 @@
 import { ChatList } from "@/components/chat";
-import { ScreenContainer } from "@/components/ui";
+import { LoadingOverlay, ScreenContainer } from "@/components/ui";
 import { BorderRadius, FontSize, Layout, Palette } from "@/constants";
 import { useNetwork } from "@/hooks";
 import { logout } from "@/lib/auth";
 import { subscribeToConversations } from "@/lib/database";
 import type { AppDispatch, RootState } from "@/store";
 import { selectConversationList } from "@/store/slices/chat-slice";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -15,12 +15,12 @@ export default function ChatsScreen() {
   const uid = useSelector((state: RootState) => state.auth.uid) ?? "";
   const displayName = useSelector((state: RootState) => state.auth.displayName);
   const conversations = useSelector(selectConversationList);
+  const [isLoading, setIsLoading] = useState(true);
   useNetwork();
 
   useEffect(() => {
     if (!uid) return;
-    const unsubscribe = subscribeToConversations(uid, dispatch);
-    return unsubscribe;
+    return subscribeToConversations(uid, dispatch, () => setIsLoading(false));
   }, [uid, dispatch]);
 
   const handleLogout = useCallback(() => {
@@ -48,7 +48,7 @@ export default function ChatsScreen() {
         </View>
       </View>
 
-      <ChatList conversations={conversations} currentUid={uid} />
+      {isLoading ? <LoadingOverlay /> : <ChatList conversations={conversations} currentUid={uid} />}
     </ScreenContainer>
   );
 }

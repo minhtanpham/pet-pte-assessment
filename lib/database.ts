@@ -16,6 +16,7 @@ import { supabase } from "./supabase";
 export function subscribeToMessages(
   conversationId: string,
   dispatch: AppDispatch,
+  onReady?: () => void,
 ) {
   // Fetch existing messages first
   supabase
@@ -35,6 +36,7 @@ export function subscribeToMessages(
         conversationId,
       }));
       dispatch(setMessages({ conversationId, messages: msgs }));
+      onReady?.();
     });
 
   // Subscribe to new messages in real-time
@@ -142,7 +144,7 @@ export async function markAsSeen(
 
 // --- Conversation helpers ---
 
-export function subscribeToConversations(uid: string, dispatch: AppDispatch) {
+export function subscribeToConversations(uid: string, dispatch: AppDispatch, onReady?: () => void) {
   supabase
     .from("conversations")
     .select("*")
@@ -160,6 +162,7 @@ export function subscribeToConversations(uid: string, dispatch: AppDispatch) {
             })),
           ),
         );
+      onReady?.();
     });
 
   const channel = supabase
@@ -249,6 +252,7 @@ export async function createGroup(
 export function subscribeToGroupMessages(
   groupId: string,
   dispatch: AppDispatch,
+  onReady?: () => void,
 ) {
   supabase
     .from("group_messages")
@@ -267,6 +271,7 @@ export function subscribeToGroupMessages(
         conversationId: groupId,
       }));
       dispatch(setMessages({ conversationId: groupId, messages: msgs }));
+      onReady?.();
     });
 
   const channel = supabase

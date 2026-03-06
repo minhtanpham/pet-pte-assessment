@@ -31,6 +31,7 @@ export default function ChatScreen() {
     selectPendingMessages(state, conversationId),
   );
   const [otherUserName, setOtherUserName] = useState("Chat");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!conversationId || !uid) return;
@@ -54,7 +55,7 @@ export default function ChatScreen() {
 
   useEffect(() => {
     if (!conversationId) return;
-    return subscribeToMessages(conversationId, dispatch);
+    return subscribeToMessages(conversationId, dispatch, () => setIsLoading(false));
   }, [conversationId, dispatch]);
 
   useEffect(() => {
@@ -111,6 +112,7 @@ export default function ChatScreen() {
       onSend={handleSend}
       headerRight={headerRight}
       isOffline={!isConnected}
+      isLoading={isLoading}
     />
   );
 }

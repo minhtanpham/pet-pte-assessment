@@ -1,5 +1,5 @@
 import { BorderRadius, FontSize, Layout, Palette, Spacing } from "@/constants";
-import { ScreenContainer } from "@/components/ui";
+import { LoadingOverlay, ScreenContainer } from "@/components/ui";
 import { createGroup } from "@/lib/database";
 import { supabase } from "@/lib/supabase";
 import type { AppDispatch, RootState } from "@/store";
@@ -29,6 +29,7 @@ export default function GroupsScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const uid = useSelector((state: RootState) => state.auth.uid) ?? "";
   const [groups, setGroups] = useState<Group[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [selectedParticipantUids, setSelectedParticipantUids] = useState<
@@ -56,6 +57,7 @@ export default function GroupsScreen() {
                 lastMessage: g.last_message,
               })),
             );
+          setIsLoading(false);
         });
     };
 
@@ -108,6 +110,9 @@ export default function GroupsScreen() {
         </TouchableOpacity>
       </View>
 
+      {isLoading ? (
+        <LoadingOverlay />
+      ) : (
       <FlatList
         data={groups}
         keyExtractor={(item) => item.id}
@@ -138,6 +143,7 @@ export default function GroupsScreen() {
           </View>
         }
       />
+      )}
 
       <CreateNewGroupModal
         visible={showCreate}

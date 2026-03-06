@@ -15,6 +15,7 @@ export default function GroupChatScreen() {
     selectMessages(state, groupId),
   );
   const [groupName, setGroupName] = useState("Group");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!groupId) return;
@@ -30,7 +31,7 @@ export default function GroupChatScreen() {
 
   useEffect(() => {
     if (!groupId) return;
-    return subscribeToGroupMessages(groupId, dispatch);
+    return subscribeToGroupMessages(groupId, dispatch, () => setIsLoading(false));
   }, [groupId, dispatch]);
 
   const handleSend = useCallback(
@@ -47,6 +48,7 @@ export default function GroupChatScreen() {
       messages={messages}
       currentUid={uid}
       onSend={handleSend}
+      isLoading={isLoading}
     />
   );
 }

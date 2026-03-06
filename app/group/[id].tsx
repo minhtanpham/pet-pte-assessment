@@ -1,4 +1,4 @@
-import { ChatView } from "@/components/chat/chat-view";
+import { ChatView } from "@/components/chat";
 import { sendGroupMessage, subscribeToGroupMessages } from "@/lib/database";
 import { supabase } from "@/lib/supabase";
 import type { AppDispatch, RootState } from "@/store";

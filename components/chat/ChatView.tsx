@@ -9,8 +9,8 @@ import {
 } from "react-native";
 import { Stack } from "expo-router";
 import type { Message } from "@/store/slices/chat-slice";
-import { MessageBubble } from "./message-bubble";
-import { ChatInput } from "./chat-input";
+import { MessageBubble } from "./MessageBubble";
+import { ChatInput } from "./ChatInput";
 
 interface Props {
   title: string;

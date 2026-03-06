@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { IconSymbol } from '@/components/ui';
 
 interface Props {
   onSend: (text: string) => void;

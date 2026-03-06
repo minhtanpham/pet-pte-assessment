@@ -7,7 +7,7 @@ import { Provider, useDispatch, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { ActivityIndicator, View } from 'react-native';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useColorScheme } from '@/hooks';
 import { store, persistor } from '@/store';
 import type { AppDispatch, RootState } from '@/store';
 import { setUser, clearUser, setLoading } from '@/store/slices/auth-slice';

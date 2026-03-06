@@ -13,9 +13,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@/store';
 import { selectConversationList } from '@/store/slices/chat-slice';
 import { subscribeToConversations, searchUsers, createConversation } from '@/lib/database';
-import { ChatList } from '@/components/chat/chat-list';
+import { ChatList } from '@/components/chat';
 import { logout } from '@/lib/auth';
-import { useNetwork } from '@/hooks/use-network';
+import { useNetwork } from '@/hooks';
 
 export default function ChatsScreen() {
   const dispatch = useDispatch<AppDispatch>();

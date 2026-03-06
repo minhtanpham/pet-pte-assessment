@@ -1,4 +1,4 @@
-import { ChatView } from "@/components/chat/chat-view";
+import { ChatView } from "@/components/chat";
 import {
   markAsSeen,
   sendMessageOrQueue,

@@ -1,5 +1,5 @@
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { IconSymbol } from '@/components/ui';
 
 interface Props {
   isMuted: boolean;

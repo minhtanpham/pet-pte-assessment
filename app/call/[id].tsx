@@ -4,8 +4,8 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { RTCView } from 'react-native-webrtc';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/store';
-import { useWebRTC } from '@/hooks/use-webrtc';
-import { CallControls } from '@/components/call/call-controls';
+import { useWebRTC } from '@/hooks';
+import { CallControls } from '@/components/call';
 
 export default function CallScreen() {
   const { id: callId } = useLocalSearchParams<{ id: string }>();

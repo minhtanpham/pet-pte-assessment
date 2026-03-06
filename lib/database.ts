@@ -10,8 +10,24 @@ import {
 } from "@/store/slices/chat-slice";
 import { notifyGroupMessageRecipients, notifyMessageRecipients } from "./notifications";
 import { supabase } from "./supabase";
+import { decryptMessage, encryptMessage, getRecipientPublicKey } from "./encryption";
 
 // --- Message helpers ---
+
+function toMessage(row: any, conversationId: string): Message {
+  let text = row.text as string;
+  if (row.encrypted && row.nonce && row.sender_public_key) {
+    text = decryptMessage(row.text, row.nonce, row.sender_public_key) ?? '[encrypted]';
+  }
+  return {
+    id: row.id,
+    senderId: row.sender_id,
+    text,
+    createdAt: new Date(row.created_at).getTime(),
+    status: row.status ?? 'sent',
+    conversationId,
+  };
+}
 
 export function subscribeToMessages(
   conversationId: string,
@@ -27,15 +43,7 @@ export function subscribeToMessages(
     .limit(Query.messageLimit)
     .then(({ data }) => {
       if (!data) return;
-      const msgs: Message[] = data.map((row) => ({
-        id: row.id,
-        senderId: row.sender_id,
-        text: row.text as string,
-        createdAt: new Date(row.created_at).getTime(),
-        status: row.status ?? "sent",
-        conversationId,
-      }));
-      dispatch(setMessages({ conversationId, messages: msgs }));
+      dispatch(setMessages({ conversationId, messages: data.map((row) => toMessage(row, conversationId)) }));
       onReady?.();
     });
 
@@ -51,17 +59,7 @@ export function subscribeToMessages(
         filter: `conversation_id=eq.${conversationId}`,
       },
       (payload) => {
-        const row = payload.new as any;
-        dispatch(
-          addMessage({
-            id: row.id,
-            senderId: row.sender_id,
-            text: row.text as string,
-            createdAt: new Date(row.created_at).getTime(),
-            status: row.status ?? "sent",
-            conversationId,
-          }),
-        );
+        dispatch(addMessage(toMessage(payload.new, conversationId)));
       },
     )
     .on(
@@ -91,18 +89,44 @@ export async function sendMessage(
   senderId: string,
   text: string,
 ): Promise<void> {
-  await supabase.from("messages").insert({
+  // Attempt E2E encryption using recipient's public key
+  let insertData: Record<string, unknown> = {
     conversation_id: conversationId,
     sender_id: senderId,
     text,
     encrypted: false,
-    status: "sent",
-  });
+    status: 'sent',
+  };
+
+  const { data: conv } = await supabase
+    .from('conversations')
+    .select('participants')
+    .eq('id', conversationId)
+    .single();
+
+  const recipientId = (conv?.participants as string[] | undefined)?.find((p) => p !== senderId);
+  if (recipientId) {
+    const recipientPublicKey = await getRecipientPublicKey(recipientId);
+    if (recipientPublicKey) {
+      const { ciphertext, nonce, senderPublicKey } = encryptMessage(text, recipientPublicKey);
+      insertData = {
+        conversation_id: conversationId,
+        sender_id: senderId,
+        text: ciphertext,
+        nonce,
+        sender_public_key: senderPublicKey,
+        encrypted: true,
+        status: 'sent',
+      };
+    }
+  }
+
+  await supabase.from('messages').insert(insertData);
 
   await supabase
-    .from("conversations")
+    .from('conversations')
     .update({ last_message: text, updated_at: new Date().toISOString() })
-    .eq("id", conversationId);
+    .eq('id', conversationId);
 
   notifyMessageRecipients(conversationId, senderId, text).catch(() => {});
 }

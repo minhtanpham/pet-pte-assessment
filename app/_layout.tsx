@@ -16,6 +16,7 @@ import { setUser, clearUser, setLoading } from '@/store/slices/auth-slice';
 import { supabase } from '@/lib/supabase';
 import { restoreSession } from '@/lib/auth';
 import { registerForPushNotifications } from '@/lib/notifications';
+import { publishPublicKey } from '@/lib/encryption';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -52,6 +53,7 @@ function AuthGate() {
           displayName: user.user_metadata?.display_name ?? null,
         }));
         registerForPushNotifications(user.id).catch(() => {});
+        publishPublicKey(user.id).catch(() => {});
       } else {
         dispatch(clearUser());
       }

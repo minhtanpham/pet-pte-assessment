@@ -1,21 +1,28 @@
 import { ChatList } from "@/components/chat";
+import { SearchDisplayNameModal, type SearchResultUser } from "@/components/modals/SearchDisplayNameModal";
 import { LoadingOverlay, ScreenContainer } from "@/components/ui";
 import { BorderRadius, FontSize, Layout, Palette } from "@/constants";
 import { useNetwork } from "@/hooks";
 import { logout } from "@/lib/auth";
-import { subscribeToConversations } from "@/lib/database";
+import { createConversation, searchUsers, subscribeToConversations } from "@/lib/database";
 import type { AppDispatch, RootState } from "@/store";
 import { selectConversationList } from "@/store/slices/chat-slice";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "expo-router";
 
 export default function ChatsScreen() {
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
   const uid = useSelector((state: RootState) => state.auth.uid) ?? "";
   const displayName = useSelector((state: RootState) => state.auth.displayName);
   const conversations = useSelector(selectConversationList);
   const [isLoading, setIsLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<SearchResultUser[]>([]);
   useNetwork();
 
   useEffect(() => {
@@ -34,6 +41,31 @@ export default function ChatsScreen() {
     ]);
   }, [dispatch]);
 
+  const handleSearch = useCallback(async () => {
+    if (!searchQuery.trim()) return;
+    setSearching(true);
+    try {
+      const results = await searchUsers(searchQuery.trim(), uid);
+      setSearchResults(results);
+    } finally {
+      setSearching(false);
+    }
+  }, [searchQuery, uid]);
+
+  const handleSelectUser = useCallback(async (targetUid: string) => {
+    setModalVisible(false);
+    setSearchQuery("");
+    setSearchResults([]);
+    const conversationId = await createConversation(uid, targetUid);
+    router.push(`/chat/${conversationId}`);
+  }, [uid, router]);
+
+  const handleCloseModal = useCallback(() => {
+    setModalVisible(false);
+    setSearchQuery("");
+    setSearchResults([]);
+  }, []);
+
   return (
     <ScreenContainer edges={['top']} backgroundColor={Palette.white}>
       <View style={styles.header}>
@@ -42,6 +74,9 @@ export default function ChatsScreen() {
           {displayName && <Text style={styles.subtitle}>{displayName}</Text>}
         </View>
         <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => setModalVisible(true)}>
+            <Text style={styles.iconButtonText}>+</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutText}>Sign Out</Text>
           </TouchableOpacity>
@@ -49,6 +84,17 @@ export default function ChatsScreen() {
       </View>
 
       {isLoading ? <LoadingOverlay /> : <ChatList conversations={conversations} currentUid={uid} />}
+
+      <SearchDisplayNameModal
+        visible={modalVisible}
+        searching={searching}
+        searchQuery={searchQuery}
+        results={searchResults}
+        onChangeSearchQuery={setSearchQuery}
+        onSearch={handleSearch}
+        onSelectUser={handleSelectUser}
+        onClose={handleCloseModal}
+      />
     </ScreenContainer>
   );
 }

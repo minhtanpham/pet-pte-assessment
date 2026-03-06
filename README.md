@@ -4,17 +4,32 @@ A real-time chat application built with [Expo](https://expo.dev) (expo-router), 
 
 ## Tech stack
 
-| Layer              | Library                                |
-| ------------------ | -------------------------------------- |
-| Framework          | Expo 54 / React Native 0.81.5          |
-| Navigation         | expo-router 6 (file-based)             |
-| Backend            | Supabase (Auth, PostgreSQL, Realtime)  |
-| State              | Redux Toolkit + Redux Persist          |
-| Local storage      | react-native-mmkv                      |
-| Session            | expo-secure-store                      |
-| Video calls        | react-native-webrtc                    |
-| Encryption         | TweetNaCl (secretbox)                  |
-| Push notifications | expo-notifications (Expo Push Service) |
+| Layer              | Library                                          |
+| ------------------ | ------------------------------------------------ |
+| Framework          | Expo 54 / React Native 0.81.5                    |
+| Navigation         | expo-router 6 (file-based)                       |
+| Backend            | Supabase (Auth, PostgreSQL, Realtime)            |
+| State              | Redux Toolkit + Redux Persist                    |
+| Local storage      | react-native-mmkv                                |
+| Session            | expo-secure-store                                |
+| Video calls        | react-native-webrtc                              |
+| Encryption         | TweetNaCl (`box` — asymmetric E2E) + Web Crypto API (`crypto.getRandomValues`) |
+| Push notifications | expo-notifications (Expo Push Service)           |
+| Safe area          | react-native-safe-area-context                   |
+
+---
+
+## Features
+
+- **Email/password auth** with persistent session via SecureStore
+- **One-on-one chat** with real-time messages, timestamps, and sent/seen indicators
+- **Group chat** — create rooms with multiple participants
+- **End-to-end encryption** — messages encrypted with NaCl `box` (asymmetric); each user's keypair stored in MMKV, public key published to Supabase
+- **Video calls** — WebRTC peer-to-peer with Supabase Realtime signaling; mute, camera toggle, end call
+- **Push notifications** — new messages trigger Expo push notifications via the Expo Push Service
+- **Offline support** — messages queued when offline (Redux Persist) and flushed on reconnect
+- **Safe area** — all screens respect device notch/home indicator via `react-native-safe-area-context`
+- **Loading states** — `ActivityIndicator` shown on every screen during initial data fetch
 
 ---
 
@@ -234,34 +249,123 @@ Open the installed dev client on your simulator and connect via QR code or press
 
 ```
 app/
-  (auth)/           login + register screens
-  (tabs)/           chats list + groups list
-  chat/[id].tsx     one-on-one chat
-  call/[id].tsx     WebRTC video call
-  group/[id].tsx    group chat
+  _layout.tsx           root layout — SafeAreaProvider, Redux Provider, auth gate
+  modal.tsx             generic modal screen
+  (auth)/
+    _layout.tsx         headerless stack for unauthenticated screens
+    login.tsx
+    register.tsx
+  (tabs)/
+    _layout.tsx         bottom tab navigator (Chats, Groups)
+    index.tsx           conversations list
+    groups.tsx          groups list
+    explore.tsx         placeholder / explore tab
+  chat/[id].tsx         one-on-one chat screen
+  call/[id].tsx         WebRTC video call screen
+  group/[id].tsx        group chat screen
+
 store/
-  slices/           auth, chat, network Redux slices
+  index.ts              Redux store + Redux Persist (MMKV adapter)
+  slices/
+    index.ts
+    auth-slice.ts
+    chat-slice.ts       messages, conversations, pending queue — memoized selectors
+    network-slice.ts
+
 lib/
-  supabase.ts       Supabase client (reads from .env)
-  auth.ts           Supabase Auth helpers + SecureStore session
-  database.ts       Supabase DB queries + Realtime subscriptions
-  signaling.ts      Supabase Realtime WebRTC signaling
-  encryption.ts     TweetNaCl E2E encryption (keypair in MMKV)
-  notifications.ts  Expo Push Token registration
-  storage.ts        MMKV instance + Redux Persist adapter + typed helpers
-  network.ts        NetInfo listener → Redux isConnected
-  webrtc.ts         RTCPeerConnection helpers
+  index.ts              barrel re-exports
+  supabase.ts           Supabase client (reads EXPO_PUBLIC_* env vars)
+  auth.ts               login, register, logout, restoreSession helpers
+  database.ts           Supabase queries + Realtime subscriptions (messages, conversations, groups)
+  signaling.ts          Supabase Realtime WebRTC signaling (offer/answer/ICE)
+  encryption.ts         NaCl box asymmetric E2E — keypair stored in MMKV, public key in Supabase
+  notifications.ts      Expo Push Token registration + sendPushNotification helper
+  storage.ts            MMKV instance, Redux Persist storage adapter, typed get/set helpers
+  network.ts            NetInfo → Redux isConnected
+  webrtc.ts             RTCPeerConnection lifecycle helpers
+
 hooks/
-  use-auth.ts
-  use-network.ts
-  use-webrtc.ts
-  use-messages.ts
+  index.ts
+  useAuth.ts
+  useColorScheme.ts
+  useColorScheme.web.ts
+  useMessages.ts
+  useNetwork.ts
+  useThemeColor.ts
+  useWebRTC.ts
+
 components/
-  chat/             MessageBubble, ChatInput, ChatList, GroupHeader
-  call/             CallControls
-patches/
-  expo-modules-core+3.0.29.patch   Swift 6 fix for expo-notifications
+  index.ts
+  ExternalLink.tsx
+  HapticTab.tsx
+  HelloWave.tsx
+  ParallaxScrollView.tsx
+  ThemedText.tsx
+  ThemedView.tsx
+  chat/
+    index.ts
+    ChatView.tsx        shared chat UI (FlatList + ChatInput) used by both chat and group screens
+    ChatInput.tsx       text input + send button
+    ChatList.tsx        conversations FlatList with memoized items and batch user-name fetch
+    MessageBubble.tsx   message row with sent/seen indicator (React.memo + areEqual)
+    GroupHeader.tsx
+  call/
+    index.ts
+    CallControls.tsx    mute / camera toggle / end call buttons
+  modals/
+    index.ts
+    SheetModal.tsx          bottom-sheet style modal base
+    SearchDisplayNameModal.tsx  user search by display name (for starting new chats)
+    CreateNewGroupModal.tsx     group creation form — name input + participant search
+  ui/
+    index.ts
+    ScreenContainer.tsx SafeAreaView wrapper — configurable edges, default background
+    LoadingOverlay.tsx  centred ActivityIndicator (flex: 1) for initial load states
+    IconSymbol.tsx      SF Symbols wrapper (cross-platform)
+    icon-symbol.ios.tsx iOS-native SF Symbols implementation
+    Collapsible.tsx
+
+constants/
+  index.ts              single source of truth — Palette, Colors, FontSize, Fonts, Spacing,
+                        BorderRadius, Layout, Chat (FlatList perf), Query limits
 ```
+
+---
+
+## Architecture notes
+
+### Safe area
+All screens are wrapped in `ScreenContainer` (a thin `SafeAreaView` wrapper) with configurable `edges`. Chat screens delegate the bottom edge to a `SafeAreaView` that wraps `ChatInput` inside `ChatView`, so the input bar always clears the home indicator.
+
+### Loading states
+Every data-fetching screen starts with `isLoading = true`. The subscribe helpers in `lib/database.ts` accept an optional `onReady` callback that fires once the initial Supabase fetch resolves, flipping `isLoading` to `false`. `LoadingOverlay` (centred `ActivityIndicator`) is rendered in place of content until then.
+
+### Encryption
+
+End-to-end encryption uses NaCl `box` (X25519 Diffie-Hellman key exchange + XSalsa20-Poly1305).
+
+**PRNG fix:** React Native's Hermes engine (New Architecture) exposes the Web Crypto API globally. `nacl.setPRNG()` is called once at module load to route all of NaCl's internal random-byte generation through `crypto.getRandomValues()`, eliminating the "no PRNG" error without any extra native package.
+
+**Keypair lifecycle:**
+1. On first launch `nacl.box.keyPair()` generates a keypair; it is persisted to MMKV and reused on every subsequent launch.
+2. After every login `publishPublicKey(uid)` writes the public key to `users.public_key` in Supabase.
+
+**Send path:** `sendMessage()` fetches the conversation participants, retrieves the recipient's public key from Supabase, then calls `nacl.box(plaintext, nonce, recipientPublicKey, senderSecretKey)`. The database row stores `{ text: ciphertext, nonce, sender_public_key, encrypted: true }`. Supabase never sees the plaintext.
+
+**Receive path:** `toMessage()` (called for both the initial fetch and every Realtime INSERT) checks `row.encrypted`. If true it calls `nacl.box.open(ciphertext, nonce, senderPublicKey, ownSecretKey)` to recover the plaintext. A failed decrypt returns `'[encrypted]'` instead of crashing.
+
+**Note on `tweetnacl-util` naming:** `decodeUTF8(string) → Uint8Array` (string to bytes, used before encrypting) and `encodeUTF8(Uint8Array) → string` (bytes to string, used after decrypting). The names are the inverse of what you might expect.
+
+### Offline queue
+Messages sent while `network.isConnected` is `false` are stored in `pendingMessages[]` inside the Redux slice (persisted to MMKV). A `useEffect` watching `isConnected` flushes the queue when connectivity is restored.
+
+### FlatList performance
+- `getItemLayout` with fixed heights from `Chat` constants eliminates layout recalculation
+- `React.memo` + custom `areEqual` on `MessageBubble` and `ConversationItem`
+- `maxToRenderPerBatch`, `windowSize`, `initialNumToRender` tuned via `Chat` constants
+- `removeClippedSubviews` enabled
+- Memoized Redux selectors via `createSelector` (RTK)
+- `ChatList` only re-fetches display names when participant UIDs change (not on every `lastMessage` update)
 
 ---
 
@@ -280,3 +384,4 @@ patches/
 - [Supabase Docs](https://supabase.com/docs)
 - [react-native-webrtc](https://github.com/react-native-webrtc/react-native-webrtc)
 - [Expo Router](https://docs.expo.dev/router/introduction)
+- [TweetNaCl](https://tweetnacl.js.org)

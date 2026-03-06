@@ -1,7 +1,13 @@
 import nacl from 'tweetnacl';
-import { encodeBase64, decodeBase64, encodeUTF8, decodeUTF8 } from 'tweetnacl-util';
+import { decodeBase64, decodeUTF8, encodeBase64, encodeUTF8 } from 'tweetnacl-util';
 import { Storage } from './storage';
 import { supabase } from './supabase';
+
+// Hook Web Crypto API (available in Hermes / New Architecture) into NaCl's PRNG.
+// This fixes the "no PRNG" error and covers all internal nacl.randomBytes() calls.
+nacl.setPRNG((x: Uint8Array, n: number) => {
+  crypto.getRandomValues(x.subarray(0, n));
+});
 
 const KEYPAIR_KEY = 'nacl_keypair';
 
@@ -18,6 +24,7 @@ function getOrCreateKeypair(): nacl.BoxKeyPair {
       secretKey: decodeBase64(stored.secretKey),
     };
   }
+  // nacl.box.keyPair() now safely uses Web Crypto via the PRNG we set above
   const keypair = nacl.box.keyPair();
   Storage.setObject(KEYPAIR_KEY, {
     publicKey: encodeBase64(keypair.publicKey),
@@ -41,16 +48,14 @@ export async function getRecipientPublicKey(uid: string): Promise<Uint8Array | n
   return decodeBase64(data.public_key);
 }
 
-export function encryptMessage(text: string): {
-  ciphertext: string;
-  nonce: string;
-  senderPublicKey: string;
-} {
+export function encryptMessage(
+  text: string,
+  recipientPublicKey: Uint8Array,
+): { ciphertext: string; nonce: string; senderPublicKey: string } {
   const keypair = getOrCreateKeypair();
   const nonce = nacl.randomBytes(nacl.box.nonceLength);
-  // Symmetric encryption using secretbox for simplicity without recipient key lookup
-  const messageUint8 = encodeUTF8(text);
-  const box = nacl.secretbox(messageUint8, nonce, keypair.secretKey.slice(0, 32));
+  // decodeUTF8: string → Uint8Array (tweetnacl-util naming)
+  const box = nacl.box(decodeUTF8(text), nonce, recipientPublicKey, keypair.secretKey);
   return {
     ciphertext: encodeBase64(box),
     nonce: encodeBase64(nonce),
@@ -65,11 +70,15 @@ export function decryptMessage(
 ): string | null {
   try {
     const keypair = getOrCreateKeypair();
-    const box = decodeBase64(ciphertext);
-    const nonceUint8 = decodeBase64(nonce);
-    const opened = nacl.secretbox.open(box, nonceUint8, keypair.secretKey.slice(0, 32));
+    const opened = nacl.box.open(
+      decodeBase64(ciphertext),
+      decodeBase64(nonce),
+      decodeBase64(senderPublicKeyB64),
+      keypair.secretKey,
+    );
     if (!opened) return null;
-    return decodeUTF8(opened);
+    // encodeUTF8: Uint8Array → string (tweetnacl-util naming)
+    return encodeUTF8(opened);
   } catch {
     return null;
   }

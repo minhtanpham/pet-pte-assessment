@@ -1,12 +1,13 @@
 import nacl from 'tweetnacl';
 import { decodeBase64, decodeUTF8, encodeBase64, encodeUTF8 } from 'tweetnacl-util';
+import * as ExpoCrypto from 'expo-crypto';
 import { Storage } from './storage';
 import { supabase } from './supabase';
 
-// Hook Web Crypto API (available in Hermes / New Architecture) into NaCl's PRNG.
-// This fixes the "no PRNG" error and covers all internal nacl.randomBytes() calls.
+// Use expo-crypto for cross-platform random bytes (works on Hermes / New Architecture).
 nacl.setPRNG((x: Uint8Array, n: number) => {
-  crypto.getRandomValues(x.subarray(0, n));
+  const randomBytes = ExpoCrypto.getRandomBytes(n);
+  x.set(randomBytes.subarray(0, n));
 });
 
 const KEYPAIR_KEY = 'nacl_keypair';
@@ -51,15 +52,15 @@ export async function getRecipientPublicKey(uid: string): Promise<Uint8Array | n
 export function encryptMessage(
   text: string,
   recipientPublicKey: Uint8Array,
-): { ciphertext: string; nonce: string; senderPublicKey: string } {
+): { ciphertext: string; nonce: string; senderPublicKey: string; recipientPublicKey: string } {
   const keypair = getOrCreateKeypair();
   const nonce = nacl.randomBytes(nacl.box.nonceLength);
-  // decodeUTF8: string → Uint8Array (tweetnacl-util naming)
   const box = nacl.box(decodeUTF8(text), nonce, recipientPublicKey, keypair.secretKey);
   return {
     ciphertext: encodeBase64(box),
     nonce: encodeBase64(nonce),
     senderPublicKey: encodeBase64(keypair.publicKey),
+    recipientPublicKey: encodeBase64(recipientPublicKey),
   };
 }
 

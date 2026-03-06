@@ -10,14 +10,18 @@ import {
 } from "@/store/slices/chat-slice";
 import { notifyGroupMessageRecipients, notifyMessageRecipients } from "./notifications";
 import { supabase } from "./supabase";
-import { decryptMessage, encryptMessage, getRecipientPublicKey } from "./encryption";
+import { decryptMessage, encryptMessage, getPublicKey, getRecipientPublicKey } from "./encryption";
 
 // --- Message helpers ---
 
 function toMessage(row: any, conversationId: string): Message {
   let text = row.text as string;
   if (row.encrypted && row.nonce && row.sender_public_key) {
-    text = decryptMessage(row.text, row.nonce, row.sender_public_key) ?? '[encrypted]';
+    // If the current user is the sender, decrypt using recipient's public key.
+    // If the current user is the recipient, decrypt using sender's public key.
+    const isSender = row.sender_public_key === getPublicKey();
+    const theirPublicKey = isSender ? row.recipient_public_key : row.sender_public_key;
+    text = (theirPublicKey && decryptMessage(row.text, row.nonce, theirPublicKey)) || '[encrypted]';
   }
   return {
     id: row.id,
@@ -108,13 +112,14 @@ export async function sendMessage(
   if (recipientId) {
     const recipientPublicKey = await getRecipientPublicKey(recipientId);
     if (recipientPublicKey) {
-      const { ciphertext, nonce, senderPublicKey } = encryptMessage(text, recipientPublicKey);
+      const { ciphertext, nonce, senderPublicKey, recipientPublicKey: recipientPublicKeyB64 } = encryptMessage(text, recipientPublicKey);
       insertData = {
         conversation_id: conversationId,
         sender_id: senderId,
         text: ciphertext,
         nonce,
         sender_public_key: senderPublicKey,
+        recipient_public_key: recipientPublicKeyB64,
         encrypted: true,
         status: 'sent',
       };

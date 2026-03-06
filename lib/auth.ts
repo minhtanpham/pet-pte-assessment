@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { setUser, clearUser } from '@/store/slices/auth-slice';
 import type { AppDispatch } from '@/store';
+import { getPublicKey } from './encryption';
 
 export async function login(email: string, password: string, dispatch: AppDispatch): Promise<void> {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -27,11 +28,12 @@ export async function register(
   if (error) throw error;
   const user = data.user!;
 
-  // Upsert profile row
+  // Upsert profile row with public key so encryption works immediately
   await supabase.from('users').upsert({
     id: user.id,
     email,
     display_name: displayName,
+    public_key: getPublicKey(),
   });
 
   dispatch(setUser({ uid: user.id, email, displayName }));

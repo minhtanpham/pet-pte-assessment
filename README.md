@@ -94,6 +94,7 @@ create table public.messages (
   text text not null,
   nonce text,
   sender_public_key text,
+  recipient_public_key text,
   encrypted boolean default false,
   status text default 'sent',
   created_at timestamptz default now()
@@ -350,9 +351,9 @@ End-to-end encryption uses NaCl `box` (X25519 Diffie-Hellman key exchange + XSal
 1. On first launch `nacl.box.keyPair()` generates a keypair; it is persisted to MMKV and reused on every subsequent launch.
 2. After every login `publishPublicKey(uid)` writes the public key to `users.public_key` in Supabase.
 
-**Send path:** `sendMessage()` fetches the conversation participants, retrieves the recipient's public key from Supabase, then calls `nacl.box(plaintext, nonce, recipientPublicKey, senderSecretKey)`. The database row stores `{ text: ciphertext, nonce, sender_public_key, encrypted: true }`. Supabase never sees the plaintext.
+**Send path:** `sendMessage()` fetches the conversation participants, retrieves the recipient's public key from Supabase, then calls `nacl.box(plaintext, nonce, recipientPublicKey, senderSecretKey)`. The database row stores `{ text: ciphertext, nonce, sender_public_key, recipient_public_key, encrypted: true }`. Supabase never sees the plaintext.
 
-**Receive path:** `toMessage()` (called for both the initial fetch and every Realtime INSERT) checks `row.encrypted`. If true it calls `nacl.box.open(ciphertext, nonce, senderPublicKey, ownSecretKey)` to recover the plaintext. A failed decrypt returns `'[encrypted]'` instead of crashing.
+**Receive path:** `toMessage()` (called for both the initial fetch and every Realtime INSERT) checks `row.encrypted`. If the current user is the **recipient**, it decrypts with `nacl.box.open(ciphertext, nonce, senderPublicKey, ownSecretKey)`. If the current user is the **sender** (detected by comparing `sender_public_key` with the local keypair), it decrypts with `nacl.box.open(ciphertext, nonce, recipientPublicKey, ownSecretKey)` — both sides derive the same shared secret. A failed decrypt returns `'[encrypted]'` instead of crashing.
 
 **Note on `tweetnacl-util` naming:** `decodeUTF8(string) → Uint8Array` (string to bytes, used before encrypting) and `encodeUTF8(Uint8Array) → string` (bytes to string, used after decrypting). The names are the inverse of what you might expect.
 

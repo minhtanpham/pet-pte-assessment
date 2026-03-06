@@ -30,7 +30,9 @@ export default function GroupsScreen() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [groupName, setGroupName] = useState("");
-  const [participantUids, setParticipantUids] = useState("");
+  const [selectedParticipantUids, setSelectedParticipantUids] = useState<
+    string[]
+  >([]);
 
   useEffect(() => {
     if (!uid) return;
@@ -77,21 +79,21 @@ export default function GroupsScreen() {
       Alert.alert("Error", "Please enter a group name");
       return;
     }
-    const extra = participantUids
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const participants = Array.from(new Set([uid, ...extra]));
+    if (selectedParticipantUids.length === 0) {
+      Alert.alert("Error", "Please add at least one participant");
+      return;
+    }
+    const participants = Array.from(new Set([uid, ...selectedParticipantUids]));
     try {
       await createGroup(groupName.trim(), participants);
       setShowCreate(false);
       setGroupName("");
-      setParticipantUids("");
+      setSelectedParticipantUids([]);
     } catch (err) {
       console.error(err);
       Alert.alert("Error", "Failed to create group");
     }
-  }, [groupName, participantUids, uid]);
+  }, [groupName, selectedParticipantUids, uid]);
 
   return (
     <View style={styles.container}>
@@ -139,9 +141,10 @@ export default function GroupsScreen() {
       <CreateNewGroupModal
         visible={showCreate}
         groupName={groupName}
-        participantUids={participantUids}
+        selectedParticipantUids={selectedParticipantUids}
+        currentUid={uid}
         onChangeGroupName={setGroupName}
-        onChangeParticipantUids={setParticipantUids}
+        onChangeSelectedParticipants={setSelectedParticipantUids}
         onCreate={handleCreate}
         onClose={() => setShowCreate(false)}
       />

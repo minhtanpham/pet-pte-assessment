@@ -1,43 +1,42 @@
-import { BorderRadius, FontSize, Palette, Spacing } from '@/constants';
-import { useState } from 'react';
+import { Palette } from "@/constants";
+import { register } from "@/lib/auth";
+import { AppDispatch } from "@/store";
+import { Link, router } from "expo-router";
+import { useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-} from 'react-native';
-import { Link, router } from 'expo-router';
-import { useDispatch } from 'react-redux';
-import { register } from '@/lib/auth';
-import { AppDispatch } from '@/store';
+} from "react-native";
+import { useDispatch } from "react-redux";
 
 export default function RegisterScreen() {
   const dispatch = useDispatch<AppDispatch>();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
     if (!email.trim() || !password.trim() || !displayName.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert("Error", "Please fill in all fields");
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      Alert.alert("Error", "Password must be at least 6 characters");
       return;
     }
     try {
       setLoading(true);
       await register(email.trim(), password, displayName.trim(), dispatch);
-      router.replace('/(tabs)');
+      router.replace("/(tabs)");
     } catch (err: any) {
-      Alert.alert('Registration Failed', err.message ?? 'An error occurred');
+      Alert.alert("Registration Failed", err.message ?? "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -46,14 +45,15 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       <Text style={styles.title}>Create Account</Text>
       <Text style={styles.subtitle}>Join the chat</Text>
 
       <TextInput
         style={styles.input}
         placeholder="Display Name"
-        placeholderTextColor={Palette.grey500
+        placeholderTextColor={Palette.grey500}
         autoCapitalize="words"
         value={displayName}
         onChangeText={setDisplayName}
@@ -61,7 +61,7 @@ export default function RegisterScreen() {
       <TextInput
         style={styles.input}
         placeholder="Email"
-        placeholderTextColor={Palette.grey500
+        placeholderTextColor={Palette.grey500}
         keyboardType="email-address"
         autoCapitalize="none"
         autoComplete="email"
@@ -71,20 +71,31 @@ export default function RegisterScreen() {
       <TextInput
         style={styles.input}
         placeholder="Password (min 6 characters)"
-        placeholderTextColor={Palette.grey500
+        placeholderTextColor={Palette.grey500}
         secureTextEntry
         autoComplete="new-password"
         value={password}
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
-        {loading ? <ActivityIndicator color={Palette.white /> : <Text style={styles.buttonText}>Create Account</Text>}
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleRegister}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color={Palette.white} />
+        ) : (
+          <Text style={styles.buttonText}>Create Account</Text>
+        )}
       </TouchableOpacity>
 
       <Link href="/(auth)/login" asChild>
         <TouchableOpacity style={styles.linkButton}>
-          <Text style={styles.linkText}>Already have an account? <Text style={styles.linkBold}>Sign In</Text></Text>
+          <Text style={styles.linkText}>
+            Already have an account?{" "}
+            <Text style={styles.linkBold}>Sign In</Text>
+          </Text>
         </TouchableOpacity>
       </Link>
     </KeyboardAvoidingView>
@@ -94,13 +105,13 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 24,
     backgroundColor: Palette.white,
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: "700",
     color: Palette.black,
     marginBottom: 8,
   },
@@ -124,17 +135,17 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.primary,
     borderRadius: 12,
     paddingVertical: 16,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 8,
     marginBottom: 16,
   },
   buttonText: {
     color: Palette.white,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   linkButton: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 8,
   },
   linkText: {
@@ -143,6 +154,6 @@ const styles = StyleSheet.create({
   },
   linkBold: {
     color: Palette.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

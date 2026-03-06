@@ -1,38 +1,37 @@
-import { BorderRadius, FontSize, Palette, Spacing } from '@/constants';
-import { useState } from 'react';
+import { Palette } from "@/constants";
+import { login } from "@/lib/auth";
+import { AppDispatch } from "@/store";
+import { Link, router } from "expo-router";
+import { useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-} from 'react-native';
-import { Link, router } from 'expo-router';
-import { useDispatch } from 'react-redux';
-import { login } from '@/lib/auth';
-import { AppDispatch } from '@/store';
+} from "react-native";
+import { useDispatch } from "react-redux";
 
 export default function LoginScreen() {
   const dispatch = useDispatch<AppDispatch>();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please enter email and password');
+      Alert.alert("Error", "Please enter email and password");
       return;
     }
     try {
       setLoading(true);
       await login(email.trim(), password, dispatch);
-      router.replace('/(tabs)');
+      router.replace("/(tabs)");
     } catch (err: any) {
-      Alert.alert('Login Failed', err.message ?? 'An error occurred');
+      Alert.alert("Login Failed", err.message ?? "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -41,14 +40,15 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       <Text style={styles.title}>Welcome Back</Text>
       <Text style={styles.subtitle}>Sign in to continue</Text>
 
       <TextInput
         style={styles.input}
         placeholder="Email"
-        placeholderTextColor={Palette.grey500
+        placeholderTextColor={Palette.grey500}
         keyboardType="email-address"
         autoCapitalize="none"
         autoComplete="email"
@@ -58,20 +58,30 @@ export default function LoginScreen() {
       <TextInput
         style={styles.input}
         placeholder="Password"
-        placeholderTextColor={Palette.grey500
+        placeholderTextColor={Palette.grey500}
         secureTextEntry
         autoComplete="password"
         value={password}
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-        {loading ? <ActivityIndicator color={Palette.white /> : <Text style={styles.buttonText}>Sign In</Text>}
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color={Palette.white} />
+        ) : (
+          <Text style={styles.buttonText}>Sign In</Text>
+        )}
       </TouchableOpacity>
 
       <Link href="/(auth)/register" asChild>
         <TouchableOpacity style={styles.linkButton}>
-          <Text style={styles.linkText}>Don't have an account? <Text style={styles.linkBold}>Sign Up</Text></Text>
+          <Text style={styles.linkText}>
+            Don't have an account? <Text style={styles.linkBold}>Sign Up</Text>
+          </Text>
         </TouchableOpacity>
       </Link>
     </KeyboardAvoidingView>
@@ -81,13 +91,13 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 24,
     backgroundColor: Palette.white,
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: "700",
     color: Palette.black,
     marginBottom: 8,
   },
@@ -111,17 +121,17 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.primary,
     borderRadius: 12,
     paddingVertical: 16,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 8,
     marginBottom: 16,
   },
   buttonText: {
     color: Palette.white,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   linkButton: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 8,
   },
   linkText: {
@@ -130,6 +140,6 @@ const styles = StyleSheet.create({
   },
   linkBold: {
     color: Palette.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

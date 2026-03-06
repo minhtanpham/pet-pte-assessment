@@ -1,7 +1,13 @@
-import { BorderRadius, FontSize, Palette, Spacing } from '@/constants';
-import { useState, useCallback } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { IconSymbol } from '@/components/ui';
+import { IconSymbol } from "@/components/ui";
+import { Palette } from "@/constants";
+import { useCallback, useState } from "react";
+import {
+  Platform,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface Props {
   onSend: (text: string) => void;
@@ -9,13 +15,13 @@ interface Props {
 }
 
 export function ChatInput({ onSend, disabled }: Props) {
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
 
   const handleSend = useCallback(() => {
     const trimmed = text.trim();
     if (!trimmed) return;
     onSend(trimmed);
-    setText('');
+    setText("");
   }, [text, onSend]);
 
   return (
@@ -23,7 +29,7 @@ export function ChatInput({ onSend, disabled }: Props) {
       <TextInput
         style={styles.input}
         placeholder="Message..."
-        placeholderTextColor={Palette.grey500
+        placeholderTextColor={Palette.grey500}
         value={text}
         onChangeText={setText}
         multiline
@@ -32,10 +38,14 @@ export function ChatInput({ onSend, disabled }: Props) {
         editable={!disabled}
       />
       <TouchableOpacity
-        style={[styles.sendButton, (!text.trim() || disabled) && styles.sendButtonDisabled]}
+        style={[
+          styles.sendButton,
+          (!text.trim() || disabled) && styles.sendButtonDisabled,
+        ]}
         onPress={handleSend}
-        disabled={!text.trim() || disabled}>
-        <IconSymbol name="paperplane.fill" size={20} color={Palette.white />
+        disabled={!text.trim() || disabled}
+      >
+        <IconSymbol name="paperplane.fill" size={20} color={Palette.white} />
       </TouchableOpacity>
     </View>
   );
@@ -43,11 +53,11 @@ export function ChatInput({ onSend, disabled }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+    flexDirection: "row",
+    alignItems: "flex-end",
     paddingHorizontal: 12,
     paddingVertical: 8,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+    paddingBottom: Platform.OS === "ios" ? 24 : 8,
     backgroundColor: Palette.white,
     borderTopWidth: 1,
     borderTopColor: Palette.grey300,
@@ -70,8 +80,8 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     backgroundColor: Palette.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   sendButtonDisabled: {
     backgroundColor: Palette.grey400,

@@ -7,13 +7,12 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   FlatList,
-  Modal,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { CreateNewGroupModal } from "@/components/modals";
 import { useDispatch, useSelector } from "react-redux";
 
 interface Group {
@@ -137,43 +136,15 @@ export default function GroupsScreen() {
         }
       />
 
-      <Modal
+      <CreateNewGroupModal
         visible={showCreate}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <View style={styles.modal}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>New Group</Text>
-            <TouchableOpacity onPress={() => setShowCreate(false)}>
-              <Text style={styles.modalClose}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.form}>
-            <TextInput
-              style={styles.input}
-              placeholder="Group name"
-              placeholderTextColor={Palette.grey500}
-              value={groupName}
-              onChangeText={setGroupName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Participant UIDs (comma-separated)"
-              placeholderTextColor={Palette.grey500}
-              value={participantUids}
-              onChangeText={setParticipantUids}
-              multiline
-            />
-            <TouchableOpacity
-              style={styles.createButton}
-              onPress={handleCreate}
-            >
-              <Text style={styles.createButtonText}>Create Group</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        groupName={groupName}
+        participantUids={participantUids}
+        onChangeGroupName={setGroupName}
+        onChangeParticipantUids={setParticipantUids}
+        onCreate={handleCreate}
+        onClose={() => setShowCreate(false)}
+      />
     </View>
   );
 }
@@ -234,35 +205,4 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emptySubtext: { fontSize: FontSize.sm, color: Palette.grey600 },
-  modal: { flex: 1, backgroundColor: Palette.white, paddingTop: 20 },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Palette.grey300,
-  },
-  modalTitle: { fontSize: FontSize.xl, fontWeight: "700", color: Palette.black },
-  modalClose: { color: Palette.primary, fontSize: FontSize.lg },
-  form: { padding: 16, gap: 12 },
-  input: {
-    borderWidth: 1,
-    borderColor: Palette.grey300,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: FontSize.md,
-    color: Palette.black,
-    backgroundColor: Palette.grey100,
-  },
-  createButton: {
-    backgroundColor: Palette.primary,
-    borderRadius: BorderRadius.md,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  createButtonText: { color: Palette.white, fontSize: FontSize.lg, fontWeight: "600" },
 });

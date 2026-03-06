@@ -1,6 +1,6 @@
-import { BorderRadius, FontSize, Palette, Spacing } from '@/constants';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import { IconSymbol } from '@/components/ui';
+import { IconSymbol } from "@/components/ui";
+import { Palette } from "@/constants";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 interface Props {
   isMuted: boolean;
@@ -10,30 +10,38 @@ interface Props {
   onEndCall: () => void;
 }
 
-export function CallControls({ isMuted, isCameraOff, onToggleMute, onToggleCamera, onEndCall }: Props) {
+export function CallControls({
+  isMuted,
+  isCameraOff,
+  onToggleMute,
+  onToggleCamera,
+  onEndCall,
+}: Props) {
   return (
     <View style={styles.container}>
       <TouchableOpacity
         style={[styles.button, isMuted && styles.buttonActive]}
-        onPress={onToggleMute}>
+        onPress={onToggleMute}
+      >
         <IconSymbol
-          name={isMuted ? 'mic.slash.fill' : 'mic.fill'}
+          name={isMuted ? "mic.slash.fill" : "mic.fill"}
           size={24}
-          color={Palette.white
+          color={Palette.white}
         />
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.endButton} onPress={onEndCall}>
-        <IconSymbol name="phone.down.fill" size={28} color={Palette.white />
+        <IconSymbol name="phone.down.fill" size={28} color={Palette.white} />
       </TouchableOpacity>
 
       <TouchableOpacity
         style={[styles.button, isCameraOff && styles.buttonActive]}
-        onPress={onToggleCamera}>
+        onPress={onToggleCamera}
+      >
         <IconSymbol
-          name={isCameraOff ? 'video.slash.fill' : 'video.fill'}
+          name={isCameraOff ? "video.slash.fill" : "video.fill"}
           size={24}
-          color={Palette.white
+          color={Palette.white}
         />
       </TouchableOpacity>
     </View>
@@ -42,32 +50,32 @@ export function CallControls({ isMuted, isCameraOff, onToggleMute, onToggleCamer
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 48,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     gap: 24,
   },
   button: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255,255,255,0.25)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   buttonActive: {
-    backgroundColor: 'rgba(255,255,255,0.5)',
+    backgroundColor: "rgba(255,255,255,0.5)",
   },
   endButton: {
     width: 68,
     height: 68,
     borderRadius: 34,
     backgroundColor: Palette.danger,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

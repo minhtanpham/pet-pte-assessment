@@ -5,11 +5,9 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Modal,
-  TextInput,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
+import { SearchDisplayNameModal } from '@/components/modals';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@/store';
 import { selectConversationList } from '@/store/slices/chat-slice';
@@ -88,48 +86,20 @@ export default function ChatsScreen() {
 
       <ChatList conversations={conversations} currentUid={uid} />
 
-      <Modal visible={showNewChat} animationType="slide" presentationStyle="pageSheet">
-        <View style={styles.modal}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>New Chat</Text>
-            <TouchableOpacity onPress={() => { setShowNewChat(false); setSearchResults([]); setSearchQuery(''); }}>
-              <Text style={styles.modalClose}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.searchRow}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search by display name..."
-              placeholderTextColor={Palette.grey500}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onSubmitEditing={handleSearch}
-              returnKeyType="search"
-            />
-            <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-              {searching ? (
-                <ActivityIndicator size="small" color={Palette.white} />
-              ) : (
-                <Text style={styles.searchButtonText}>Search</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-          {searchResults.map((user) => (
-            <TouchableOpacity
-              key={user.uid}
-              style={styles.userItem}
-              onPress={() => handleStartChat(user.uid)}>
-              <View style={styles.userAvatar}>
-                <Text style={styles.userAvatarText}>{user.displayName?.charAt(0).toUpperCase()}</Text>
-              </View>
-              <View>
-                <Text style={styles.userName}>{user.displayName}</Text>
-                <Text style={styles.userEmail}>{user.email}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </Modal>
+      <SearchDisplayNameModal
+        visible={showNewChat}
+        searching={searching}
+        searchQuery={searchQuery}
+        results={searchResults}
+        onChangeSearchQuery={setSearchQuery}
+        onSearch={handleSearch}
+        onSelectUser={handleStartChat}
+        onClose={() => {
+          setShowNewChat(false);
+          setSearchResults([]);
+          setSearchQuery('');
+        }}
+      />
     </View>
   );
 }
@@ -160,55 +130,4 @@ const styles = StyleSheet.create({
   iconButtonText: { color: Palette.white, fontSize: FontSize.xxl, lineHeight: 28 },
   logoutButton: { paddingHorizontal: 12, paddingVertical: 6 },
   logoutText: { color: Palette.danger, fontSize: FontSize.sm, fontWeight: '500' },
-  modal: { flex: 1, backgroundColor: Palette.white, paddingTop: 20 },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Palette.grey300,
-  },
-  modalTitle: { fontSize: FontSize.xl, fontWeight: '700', color: Palette.black },
-  modalClose: { color: Palette.primary, fontSize: FontSize.lg },
-  searchRow: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
-  searchInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: Palette.grey300,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: FontSize.md,
-    color: Palette.black,
-    backgroundColor: Palette.grey100,
-  },
-  searchButton: {
-    backgroundColor: Palette.primary,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: 16,
-    justifyContent: 'center',
-  },
-  searchButtonText: { color: Palette.white, fontWeight: '600' },
-  userItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Palette.grey300,
-    gap: 12,
-  },
-  userAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.round,
-    backgroundColor: Palette.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  userAvatarText: { color: Palette.white, fontSize: FontSize.lg, fontWeight: '600' },
-  userName: { fontSize: FontSize.md, fontWeight: '600', color: Palette.black },
-  userEmail: { fontSize: FontSize.sm, color: Palette.grey600 },
 });

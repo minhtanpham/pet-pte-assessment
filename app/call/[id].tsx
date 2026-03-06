@@ -1,12 +1,12 @@
-import { BorderRadius, FontSize, Palette, Spacing } from '@/constants';
-import { useEffect, useCallback } from 'react';
-import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
-import { RTCView } from 'react-native-webrtc';
-import { useSelector } from 'react-redux';
-import type { RootState } from '@/store';
-import { useWebRTC } from '@/hooks';
-import { CallControls } from '@/components/call';
+import { CallControls } from "@/components/call";
+import { Palette } from "@/constants";
+import { useWebRTC } from "@/hooks";
+import type { RootState } from "@/store";
+import { router, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect } from "react";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { RTCView } from "react-native-webrtc";
+import { useSelector } from "react-redux";
 
 export default function CallScreen() {
   const { id: callId } = useLocalSearchParams<{ id: string }>();
@@ -22,11 +22,13 @@ export default function CallScreen() {
     endCall,
     toggleMute,
     toggleCamera,
-  } = useWebRTC(callId, uid ?? '');
+  } = useWebRTC(callId, uid ?? "");
 
   useEffect(() => {
     if (uid) startCall();
-    return () => { endCall(); };
+    return () => {
+      endCall();
+    };
   }, []);
 
   const handleEndCall = useCallback(() => {
@@ -45,9 +47,9 @@ export default function CallScreen() {
         />
       ) : (
         <View style={styles.waitingContainer}>
-          <ActivityIndicator size="large" color={Palette.white />
+          <ActivityIndicator size="large" color={Palette.white} />
           <Text style={styles.waitingText}>
-            {callStatus === 'ringing' ? 'Ringing...' : 'Connecting...'}
+            {callStatus === "ringing" ? "Ringing..." : "Connecting..."}
           </Text>
         </View>
       )}
@@ -77,13 +79,13 @@ const styles = StyleSheet.create({
   remoteStream: { ...StyleSheet.absoluteFillObject },
   waitingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     gap: 16,
   },
   waitingText: { color: Palette.white, fontSize: 18 },
   localStream: {
-    position: 'absolute',
+    position: "absolute",
     top: 60,
     right: 16,
     width: 100,
@@ -91,6 +93,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
     borderColor: Palette.white,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
 });

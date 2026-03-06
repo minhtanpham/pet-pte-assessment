@@ -224,7 +224,7 @@ export function subscribeToGroupMessages(groupId: string, dispatch: AppDispatch)
           senderId: row.sender_id,
           text: row.text,
           createdAt: new Date(row.created_at).getTime(),
-          status: 'sent',
+          status: row.status ?? 'sent',
           conversationId: groupId,
         }));
       },

@@ -1,5 +1,4 @@
-import { ChatInput } from "@/components/chat/chat-input";
-import { MessageBubble } from "@/components/chat/message-bubble";
+import { ChatView } from "@/components/chat/chat-view";
 import {
   markAsSeen,
   sendMessageOrQueue,
@@ -7,23 +6,14 @@ import {
 } from "@/lib/database";
 import { supabase } from "@/lib/supabase";
 import type { AppDispatch, RootState } from "@/store";
-import type { Message } from "@/store/slices/chat-slice";
 import {
   removePendingMessage,
   selectMessages,
   selectPendingMessages,
 } from "@/store/slices/chat-slice";
-import { Stack, router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import {
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function ChatScreen() {
@@ -63,8 +53,7 @@ export default function ChatScreen() {
 
   useEffect(() => {
     if (!conversationId) return;
-    const unsubscribe = subscribeToMessages(conversationId, dispatch);
-    return unsubscribe;
+    return subscribeToMessages(conversationId, dispatch);
   }, [conversationId, dispatch]);
 
   useEffect(() => {
@@ -72,19 +61,12 @@ export default function ChatScreen() {
     markAsSeen(conversationId, uid);
   }, [conversationId, uid, messages.length]);
 
-  // Flush pending messages when reconnected
   useEffect(() => {
     if (!isConnected || !uid || pendingMessages.length === 0) return;
     const flush = async () => {
       for (const msg of pendingMessages) {
         try {
-          await sendMessageOrQueue(
-            conversationId,
-            uid,
-            msg.text,
-            dispatch,
-            true,
-          );
+          await sendMessageOrQueue(conversationId, uid, msg.text, dispatch, true);
           dispatch(removePendingMessage(msg.id));
         } catch {}
       }
@@ -105,78 +87,31 @@ export default function ChatScreen() {
     ...messages,
   ];
 
-  const renderItem = useCallback(
-    ({ item }: { item: Message }) => (
-      <MessageBubble message={item} isOwn={item.senderId === uid} />
+  const headerRight = useCallback(
+    () => (
+      <TouchableOpacity
+        onPress={() => router.push(`/call/${conversationId}`)}
+        style={styles.callButton}
+      >
+        <Text style={styles.callButtonText}>Video Call</Text>
+      </TouchableOpacity>
     ),
-    [uid],
-  );
-
-  const ITEM_HEIGHT = 64;
-  const getItemLayout = useCallback(
-    (_: any, index: number) => ({
-      length: ITEM_HEIGHT,
-      offset: ITEM_HEIGHT * index,
-      index,
-    }),
-    [],
+    [conversationId],
   );
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          title: otherUserName,
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => router.push(`/call/${conversationId}`)}
-              style={styles.callButton}
-            >
-              <Text style={styles.callButtonText}>Video Call</Text>
-            </TouchableOpacity>
-          ),
-        }}
-      />
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={90}
-      >
-        {!isConnected && (
-          <View style={styles.offlineBanner}>
-            <Text style={styles.offlineText}>
-              You are offline. Messages will be sent when reconnected.
-            </Text>
-          </View>
-        )}
-        <FlatList
-          data={allMessages}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          getItemLayout={getItemLayout}
-          inverted
-          removeClippedSubviews
-          maxToRenderPerBatch={20}
-          windowSize={10}
-          contentContainerStyle={styles.listContent}
-        />
-        <ChatInput onSend={handleSend} />
-      </KeyboardAvoidingView>
-    </>
+    <ChatView
+      title={otherUserName}
+      messages={allMessages}
+      currentUid={uid}
+      onSend={handleSend}
+      headerRight={headerRight}
+      isOffline={!isConnected}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F9FAFB" },
-  listContent: { paddingHorizontal: 16, paddingVertical: 8 },
-  offlineBanner: {
-    backgroundColor: "#FEF3C7",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#FDE68A",
-  },
-  offlineText: { color: "#92400E", fontSize: 13, textAlign: "center" },
   callButton: {
     backgroundColor: "#0a7ea4",
     borderRadius: 16,

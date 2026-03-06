@@ -13,7 +13,7 @@ import {
   selectPendingMessages,
 } from "@/store/slices/chat-slice";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -83,10 +83,13 @@ export default function ChatScreen() {
     [uid, conversationId, dispatch, isConnected],
   );
 
-  const allMessages = [
-    ...pendingMessages.map((m) => ({ ...m, status: "pending" as const })),
-    ...messages,
-  ];
+  const allMessages = useMemo(
+    () => [
+      ...pendingMessages.map((m) => ({ ...m, status: "pending" as const })),
+      ...messages,
+    ],
+    [pendingMessages, messages],
+  );
 
   const headerRight = useCallback(
     () => (

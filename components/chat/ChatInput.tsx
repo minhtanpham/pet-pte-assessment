@@ -1,6 +1,6 @@
 import { IconSymbol } from "@/components/ui";
 import { Palette } from "@/constants";
-import { useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import {
   Platform,
   StyleSheet,
@@ -14,7 +14,7 @@ interface Props {
   disabled?: boolean;
 }
 
-export function ChatInput({ onSend, disabled }: Props) {
+export const ChatInput = memo(function ChatInput({ onSend, disabled }: Props) {
   const [text, setText] = useState("");
 
   const handleSend = useCallback(() => {
@@ -49,7 +49,7 @@ export function ChatInput({ onSend, disabled }: Props) {
       </TouchableOpacity>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

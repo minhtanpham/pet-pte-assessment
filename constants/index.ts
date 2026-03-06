@@ -114,6 +114,7 @@ export const Chat = {
   keyboardVerticalOffset: 90,
   maxToRenderPerBatch: 20,
   windowSize: 10,
+  initialNumToRender: 15,
 } as const;
 
 // ---------------------------------------------------------------------------

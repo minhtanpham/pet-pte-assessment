@@ -70,6 +70,7 @@ export const ChatView = memo(function ChatView({
           removeClippedSubviews
           maxToRenderPerBatch={Chat.maxToRenderPerBatch}
           windowSize={Chat.windowSize}
+          initialNumToRender={Chat.initialNumToRender}
           contentContainerStyle={styles.listContent}
         />
         <ChatInput onSend={onSend} />

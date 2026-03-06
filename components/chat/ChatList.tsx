@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -16,12 +16,25 @@ interface ConversationItemProps {
   userName: string;
 }
 
+function areItemsEqual(prev: ConversationItemProps, next: ConversationItemProps) {
+  return (
+    prev.conversation.id === next.conversation.id &&
+    prev.conversation.lastMessage === next.conversation.lastMessage &&
+    prev.conversation.updatedAt === next.conversation.updatedAt &&
+    prev.userName === next.userName
+  );
+}
+
 const ConversationItem = memo(function ConversationItem({ conversation, userName }: ConversationItemProps) {
-  const formattedTime = conversation.updatedAt
-    ? new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(
-        new Date(conversation.updatedAt),
-      )
-    : '';
+  const formattedTime = useMemo(
+    () =>
+      conversation.updatedAt
+        ? new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(
+            new Date(conversation.updatedAt),
+          )
+        : '',
+    [conversation.updatedAt],
+  );
 
   return (
     <TouchableOpacity
@@ -41,32 +54,41 @@ const ConversationItem = memo(function ConversationItem({ conversation, userName
       </View>
     </TouchableOpacity>
   );
-});
+}, areItemsEqual);
 
 export const ChatList = memo(function ChatList({ conversations, currentUid }: Props) {
   const [userNames, setUserNames] = useState<Record<string, string>>({});
+  const fetchedUidsRef = useRef(new Set<string>());
+
+  // Only re-fetch when the set of participant UIDs actually changes
+  const participantUidKey = useMemo(
+    () =>
+      [...new Set(conversations.flatMap((c) => c.participants).filter((p) => p !== currentUid))]
+        .sort()
+        .join(','),
+    [conversations, currentUid],
+  );
 
   useEffect(() => {
-    const otherUids = [
-      ...new Set(
-        conversations
-          .flatMap((c) => c.participants)
-          .filter((p) => p !== currentUid),
-      ),
-    ];
-    if (otherUids.length === 0) return;
+    const allOtherUids = participantUidKey ? participantUidKey.split(',') : [];
+    const newUids = allOtherUids.filter((uid) => !fetchedUidsRef.current.has(uid));
+    if (newUids.length === 0) return;
+
+    newUids.forEach((uid) => fetchedUidsRef.current.add(uid));
 
     supabase
       .from('users')
       .select('id, display_name, email')
-      .in('id', otherUids)
+      .in('id', newUids)
       .then(({ data }) => {
         if (!data) return;
-        const map: Record<string, string> = {};
-        data.forEach((u) => { map[u.id] = u.display_name || u.email || u.id; });
-        setUserNames(map);
+        setUserNames((prev) => {
+          const next = { ...prev };
+          data.forEach((u) => { next[u.id] = u.display_name || u.email || u.id; });
+          return next;
+        });
       });
-  }, [conversations, currentUid]);
+  }, [participantUidKey]);
 
   const renderItem = useCallback(
     ({ item }: { item: Conversation }) => {
@@ -102,6 +124,7 @@ export const ChatList = memo(function ChatList({ conversations, currentUid }: Pr
       removeClippedSubviews
       maxToRenderPerBatch={Chat.maxToRenderPerBatch}
       windowSize={Chat.windowSize}
+      initialNumToRender={Chat.initialNumToRender}
       contentContainerStyle={conversations.length === 0 && styles.emptyContainer}
       ListEmptyComponent={
         <View style={styles.emptyContent}>

@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { ActivityIndicator, View } from 'react-native';
+import * as Notifications from 'expo-notifications';
 
 import { useColorScheme } from '@/hooks';
 import { store, persistor } from '@/store';
@@ -18,6 +19,16 @@ import { registerForPushNotifications } from '@/lib/notifications';
 export const unstable_settings = {
   anchor: '(tabs)',
 };
+
+function handleNotificationResponse(response: Notifications.NotificationResponse) {
+  const data = response.notification.request.content.data as Record<string, string> | undefined;
+  if (!data) return;
+  if (data.type === 'message' && data.conversationId) {
+    router.push(`/chat/${data.conversationId}`);
+  } else if (data.type === 'group_message' && data.groupId) {
+    router.push(`/group/${data.groupId}`);
+  }
+}
 
 function AuthGate() {
   const dispatch = useDispatch<AppDispatch>();
@@ -47,6 +58,18 @@ function AuthGate() {
 
     return () => subscription.unsubscribe();
   }, [dispatch]);
+
+  // Navigate when user taps a notification
+  useEffect(() => {
+    // App opened from killed state via notification
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response) handleNotificationResponse(response);
+    });
+
+    // App in background/foreground and notification tapped
+    const sub = Notifications.addNotificationResponseReceivedListener(handleNotificationResponse);
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     if (isLoading) return;

@@ -8,6 +8,7 @@ import {
   setMessages,
   updateMessageStatus,
 } from "@/store/slices/chat-slice";
+import { notifyGroupMessageRecipients, notifyMessageRecipients } from "./notifications";
 import { supabase } from "./supabase";
 
 // --- Message helpers ---
@@ -100,6 +101,8 @@ export async function sendMessage(
     .from("conversations")
     .update({ last_message: text, updated_at: new Date().toISOString() })
     .eq("id", conversationId);
+
+  notifyMessageRecipients(conversationId, senderId, text).catch(() => {});
 }
 
 export async function sendMessageOrQueue(
@@ -312,4 +315,6 @@ export async function sendGroupMessage(
     .from("groups")
     .update({ last_message: text, updated_at: new Date().toISOString() })
     .eq("id", groupId);
+
+  notifyGroupMessageRecipients(groupId, senderId, text).catch(() => {});
 }
